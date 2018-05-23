@@ -94,16 +94,13 @@ class TBA_list(QtWidgets.QWidget):
 		self.headerLayout.insertWidget(0,header)
 
 	def addCreateButton(self):
-		path = QtGui.QPainterPath()
-		path.moveTo(20, 80)
-		path.lineTo(20, 30)
-		
-		return
 		createButton = QtWidgets.QPushButton()
 		createButton.setFixedWidth(32)
-		createButton.setFixedHeight(32)
-		createButton.setFlat(1)
-		createButton.setObjectName('create')
+		createButton.setStyleSheet('padding:0;')
+		# createButton.setFixedWidth(32)
+		# createButton.setFixedHeight(32)
+		#createButton.setFlat(1)
+		createButton.setIcon(QtGui.QIcon('plus.png'))
 		self.headerLayout.addWidget(createButton)
 
 class TBA_AssetList(QtWidgets.QWidget):

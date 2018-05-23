@@ -23,7 +23,11 @@ QLabel#header {
 QListWidget {
 	outline: 0px;
 	border: 0px;
-    padding: 10px;
+  padding: 10px;
+}
+
+QListWidget::focus {
+  outline: 0px;
 }
 
 QListWidget::item {
