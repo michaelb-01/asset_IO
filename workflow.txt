@@ -1,0 +1,80 @@
+EXPORT
+
+- created set and store root objects
+- add asset version to set (?)
+
+OnAssetSelected()
+- if TBA set exists, select all children (so you know what was previously exported - and the selection is what will be exported again)
+
+
+
+IMPORT
+
+initUI()
+
+onAssetSelected()
+- show selected asset in text field
+- updateVersionList()
+
+updateVersionList()
+- select last version
+
+onVersionSelected()
+- if TBA set exists, select all children
+- checkMetaNode()
+
+checkMetaNode()
+- if TBA set not found, return
+- iterate over 
+
+
+TBA_import()
+- if TBA asset not found: TBA_import_new()
+- else iterate over set nodes:
+- foundNodes (
+
+TBA_import_new()
+- abc import
+- set TBA_asset_ID attr on all imported geo
+- create meta node set and add imported objects
+- 
+
+TBA_import_update()
+- abc import
+
+
+EXPORT
+
+- export json file next to abc:
+- asset version, objects with name & tbaId
+
+- create TBA_asset_{{assetName}} node in maya
+	- create assetVer attribute
+   	- create attributes for root nodes, e.g. root_{{objName}}
+
+
+IMPORT
+
+FIRST TIME
+
+- import alembic
+- create attribute (tbaId) on all objects
+- store tbaId from json file on object
+
+UPDATES
+
+- get asset name and version from json file
+- find corresponding TBA_meta node (unknown node)
+- loop over attributes in TBA_meta node and get their IDs
+
+- loop over attrs in TBA_meta node
+     - loop over objects in json file
+          - if found:
+                 - add maya object to 'found'
+                 - rename it to name in json object
+          - if not found:
+                 - add maya object to 'not found'
+- import alembic
+- (optional) loop over 'found'
+      - rename back to original
+

@@ -1,0 +1,36 @@
+QWidget#tbaList * {
+	padding: 10px;
+	background-color: $grey-dark;
+	color: white;
+}
+
+QWidget#assetList * {
+	padding: 10px;
+	background-color: $grey-dark;
+	color: white;
+}
+
+// LABELS
+QLabel#header {
+	font-size: 16px;
+}
+
+
+// LIST WIDGETS
+QListWidget {
+	outline: 0;
+	border: 0;
+}
+
+QListWidget::item {
+    color: white;
+    padding: 2px;
+}
+
+QListWidget::item:hover {
+    background-color: $primary-hover;
+}
+
+QListWidget::item:selected {
+    background-color: $primary;
+}
