@@ -20,12 +20,11 @@ QWidget#tbaList * {
 
 // LABELS
 QLabel#header {
-	font-size: 16px;
+	font-size: 15px;
 }
 
 QLabel#footer {
 	font-size: 14px;
-	background-color: $grey-light;
 }
 
 // LIST WIDGETS
@@ -58,6 +57,28 @@ QListWidget::item:disabled {
 	color: $grey-dark;
 }
 
+// BUTTONS
+QPushButton * {
+  color: #ddd;
+}
+
+QPushButton:hover {
+  color: white;
+}
+
+// DIALOGS
 QInputDialog * {
 	color: white;
 }
+
+// messageBox
+QMessageBox * {
+  color: $grey-lighter;
+}
+
+// TOOLTIPS
+QToolTip {
+  padding: 0px;
+  border-radius: 3px;
+}
+

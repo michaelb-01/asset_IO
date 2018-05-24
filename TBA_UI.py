@@ -7,7 +7,7 @@ primary = QtGui.QColor(207,66,53)
 class iconButton(QtWidgets.QWidget):
 	clicked = QtCore.Signal()
 
-	def __init__(self, colour='white', hoverColour=None):
+	def __init__(self, colour='#ccc', hoverColour=None):
 		super(iconButton, self).__init__()
 
 		self.colour = colour
@@ -211,6 +211,10 @@ class TBA_list(QtWidgets.QWidget):
 		self.header.setText(self.headerText + ' (' + str(num) + ')')
 
 	def itemAdded(self, itemIndex):
+		# scroll to the last item
+		num = self.tbaList.count()
+
+		self.tbaList.scrollToItem(self.tbaList.item(num-1))
 		self.updateNumItems()
 
 

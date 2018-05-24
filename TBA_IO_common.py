@@ -9,63 +9,6 @@ import sqss_compiler
 
 import re
 
-# inherits from QWidget
-class TBA_IO_UI(QtWidgets.QWidget):
-	
-	def __init__(self):
-		super(TBA_IO_UI, self).__init__()
-		
-		self.initUI()
-		
-	def initUI(self):      
-
-		self.assetList = TBA_assetList()
-		self.assetList.clicked.connect(lambda: versionList.test())
-		
-		versionList = TBA_versionList()
-
-		# mainLayout = QtWidgets.QVBoxLayout(self)
-
-		# mainLayout.addWidget(self.assetList)
-		# mainLayout.addWidget(versionList)
-
-	def mousePressEvent(self, event):
-		
-		self.c.closeApp.emit()
-
-	def showDialog(self):
-		text, ok = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 
-			'Enter your name:')
-		
-		if ok:
-			self.le.setText(str(text))
-
-class test(QtWidgets.QPushButton):
-	
-	def __init__(self):
-		super(TBA_assetList, self).__init__()
-		
-		self.initUI()
-		
-	def initUI(self):      
-		self.setText('Test')
-
-		self.clicked.connect(lambda: self.trigger('red'))
-
-	def trigger(self, colour):
-		print 'trigger'
-		#self.setStyleSheet('background-color:' + colour)
-
-class TBA_AssetList(QtWidgets.QWidget):
-	
-	def __init__(self):
-		super(TBA_AssetList, self).__init__()
-		
-		self.initUI()
-
-	def initUI(self):    
-		self.assetList = TBA_list()
-
 class exporter(QtWidgets.QWidget):
 
 	def __init__(self):
@@ -88,11 +31,11 @@ class exporter(QtWidgets.QWidget):
 
 		self.getPublishDir()
 
-		if not self.publishDir or not self.assetsDir:
+		if not os.path.isdir(self.publishDir) or not os.path.isdir(self.assetsDir):
 			print 'could not find correct _published3d/assets folder, exiting'
-			QtCore.QCoreApplication.quit
+			QtCore.QCoreApplication.exit()
 			return
-		
+
 		self.initUI()
 		self.initPackageList()
 		self.initAssetList()
@@ -126,7 +69,9 @@ class exporter(QtWidgets.QWidget):
 
 		# add assets to asset list
 		for asset in assets:
-			self.assetList.tbaList.addItem(asset)
+			# ignore hidden files
+			if not asset.startswith('.'):
+				self.assetList.tbaList.addItem(asset)
 
 	def initTypeList(self):
 		types = ['camera', 'model', 'anim', 'fx', 'rig', 'light', 'shaders']
@@ -134,6 +79,13 @@ class exporter(QtWidgets.QWidget):
 			self.typeList.tbaList.addItem(item)
 
 		self.updateTypeList()
+
+	def onPackageSelected(self, item):
+		print 'package selected ' + item.text()
+		if not item:
+			return
+
+		self.selPackage = item.text()
 
 	def onAssetSelected(self, item):
 		if not item:
@@ -146,11 +98,15 @@ class exporter(QtWidgets.QWidget):
 		if not item:
 			return
 
-		print 'type selected'
 		self.selType = item.text()
 		self.updateVersionList()
 
 	def onVersionSelected(self, item):
+		if not item:
+			return
+
+		self.selVersion = item.text()
+
 		if not self.versionList.footer:
 			return
 
@@ -183,8 +139,8 @@ class exporter(QtWidgets.QWidget):
 		for i in range(self.typeList.tbaList.count()):
 			item = self.typeList.tbaList.item(i)
 		 
-		 	# if we are in the importer set the selectability of the item
-		 	# else just change the colour to illustrate what has already been exported
+			# if we are in the importer set the selectability of the item
+			# else just change the colour to illustrate what has already been exported
 			if item.text() in types:
 				self.enableItem(item)
 			else:
@@ -251,13 +207,74 @@ class exporter(QtWidgets.QWidget):
 		self.versionList.updateNumItems()
 
 	def addAssetDialog(self):
-		name, ok = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 
-			'Enter your name:')
+		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Asset', 
+			'Asset Name:')
 		
 		if ok:
-			#self.le.setText(str(text))
 			if len(self.assetList.tbaList.findItems(name, QtCore.Qt.MatchRegExp)) == 0:
 				self.assetList.tbaList.addItem(name)
+
+	def addToPackage(self, new):
+		if not self.selPackage:
+			print 'package not selected, exiting'
+			return
+
+		# make sure 'packages' folder exists
+		packagesDir = os.path.join(self.publishDir, 'packages')
+		if not os.path.isdir(packagesDir):
+			os.mkdir(packagesDir)
+
+		# make sure package folder exists
+		packageDir = os.path.join(packagesDir, self.selPackage)
+		if not os.path.isdir(packageDir):
+			os.mkdir(packageDir)
+
+		# make sure asset folder exists
+		assetDir = os.path.join(packageDir, self.selAsset)
+		if not os.path.isdir(assetDir):
+			os.mkdir(assetDir)
+
+		# create symlink from selected version to the package
+		typeDir = os.path.join(assetDir, self.selType)
+		version = os.path.join(self.assetsDir, self.selAsset, self.selType, self.selVersion)
+
+		print 'Link ' + version + ' to ' + typeDir
+
+		if os.path.islink(typeDir):
+			print 'UNLINKING ' + typeDir
+			os.unlink(typeDir)
+
+		os.symlink(version, typeDir)
+
+		msgBox = QtWidgets.QMessageBox()
+		msgBox.setText('Added ' + self.selAsset + '-' + self.selType + '-' + self.selVersion + 
+			' to ' + self.selPackage + ' package: \n' + typeDir)
+		msgBox.exec_()
+
+	def addToPackageClicked(self):
+		if not self.selVersion:
+			msgBox = QtWidgets.QMessageBox()
+			msgBox.setText("First select the asset version you want to add to the package")
+			msgBox.exec_()
+			return
+
+		if self.selPackage:
+			self.addToPackage(0)
+			return
+
+		# if package is not selected we need to make one
+		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Package', 
+			'Package Name:')
+
+		if ok:
+			if len(self.packageList.tbaList.findItems(name, QtCore.Qt.MatchRegExp)) == 0:
+				print 'add package and select'
+				self.packageList.tbaList.addItem(name)
+				self.selPackage = name
+				self.packageList.tbaList.setCurrentRow(self.packageList.tbaList.count()-1)
+				self.addToPackage(1)
+			else:
+				self.addToPackage(0)
 
 	# handles key events for navigating left and right between lists
 	def keyPressEvent(self, event):
@@ -325,7 +342,15 @@ class exporter(QtWidgets.QWidget):
 		# package list
 		self.packageList = TBA_UI.TBA_list()
 		self.packageList.setHeader('Packages')
-		
+		self.packageList.setFooter(' ')
+		self.packageList.tbaList.itemClicked.connect(self.onPackageSelected)
+
+		self.addToPackageBtn = TBA_UI.iconButton()
+		self.addToPackageBtn.clicked.connect(self.addToPackageClicked)
+		self.packageList.footerLayout.addWidget(self.addToPackageBtn)
+
+		self.addToPackageBtn.setToolTip("Add selected to package")
+
 		# asset list
 		self.assetList = TBA_UI.TBA_list()
 		self.assetList.setHeader('Assets')
@@ -343,6 +368,8 @@ class exporter(QtWidgets.QWidget):
 		self.versionList = TBA_UI.TBA_list()
 		self.versionList.setHeader('Versions')
 		self.versionList.setFooter('Write Version: ')
+		self.versionList.footer.setStyleSheet('background-color:rgb(100,105,115)')
+
 		self.versionList.tbaList.currentItemChanged.connect(self.onVersionSelected)
 		
 		self.versionModeToggle = TBA_UI.radioButton()
