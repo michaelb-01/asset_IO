@@ -56,66 +56,6 @@ class test(QtWidgets.QPushButton):
 		print 'trigger'
 		#self.setStyleSheet('background-color:' + colour)
 
-class TBA_list(QtWidgets.QWidget):
-	
-	def __init__(self):
-		super(TBA_list, self).__init__()
-		
-		self.initUI()
-
-	def initUI(self):    
-		self.setObjectName("tbaList")
-
-		# create a layout
-		self.mainLayout = QtWidgets.QVBoxLayout()
-		margin = 0
-		self.mainLayout.setContentsMargins(margin, margin, margin, margin)
-		self.mainLayout.setSpacing(0)
-
-		# create header, content and footer layouts
-		# header
-		self.headerLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.headerLayout)
-		# content
-		self.contentLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.contentLayout)
-		# footer
-		self.footerLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.footerLayout)
-
-		# create list widget
-		self.tbaList = QtWidgets.QListWidget(self)
-
-		# add list to content layout
-		self.contentLayout.addWidget(self.tbaList)
-
-		# set layout
-		self.setLayout(self.mainLayout)
-
-		# set empty variable for header
-		self.header = None
-
-	def setHeader(self, text):
-		# create header if it doesn't exist
-		if not self.header:
-			self.header = QtWidgets.QLabel(objectName='header')
-
-		self.header.setText(text)
-		# insert the header at 0 index with stretch factor of 1
-		self.headerLayout.insertWidget(0,self.header,1)
-
-	def oldHeader(self, text):
-		header = QtWidgets.QLabel(objectName='header')
-		header.setText(text)
-
-		# insert the header at 0 index with stretch factor of 1
-		self.headerLayout.insertWidget(0,header,1)
-
-	def addCreateButton(self):
-		self.createButton = TBA_UI.iconButton()
-
-		self.headerLayout.addWidget(self.createButton)
-
 class TBA_AssetList(QtWidgets.QWidget):
 	
 	def __init__(self):
@@ -131,6 +71,10 @@ class exporter(QtWidgets.QWidget):
 	def __init__(self):
 		super(exporter, self).__init__()
 
+		# are we importer or exporter?
+		self.importer = True
+
+		# directory paths
 		self.publishDir = None
 		self.assetsDir = None
 
@@ -177,9 +121,6 @@ class exporter(QtWidgets.QWidget):
 			self.packageList.tbaList.addItem(package)
 
 	def initAssetList(self):
-		print 'init assets'
-		#self.assetList.tbaList.addItem('test')
-
 		# get assets from dir
 		assets = sorted(os.listdir(self.assetsDir))
 
@@ -195,15 +136,33 @@ class exporter(QtWidgets.QWidget):
 		self.updateTypeList()
 
 	def onAssetSelected(self, item):
+		if not item:
+			return
+
 		self.selAsset = item.text()
 		self.updateTypeList()
 
 	def onTypeSelected(self, item):
+		if not item:
+			return
+
 		print 'type selected'
 		self.selType = item.text()
 		self.updateVersionList()
 
+	def onVersionSelected(self, item):
+		if not self.versionList.footer:
+			return
+
+		if item:
+			self.versionList.footer.setText('Write Version: ' + item.text())
+		else:
+			self.versionList.footer.setText('Write Version: ')
+		print 'version selected'
+
 	def updateTypeList(self):
+		# if this is the importer UI we need to filter by exported types
+
 		# if no asset is selected disable types and return
 		if not self.selAsset:
 			self.disableAllTypes()
@@ -224,22 +183,45 @@ class exporter(QtWidgets.QWidget):
 		for i in range(self.typeList.tbaList.count()):
 			item = self.typeList.tbaList.item(i)
 		 
+		 	# if we are in the importer set the selectability of the item
+		 	# else just change the colour to illustrate what has already been exported
 			if item.text() in types:
-				# enable item and make it selectable
-				item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+				self.enableItem(item)
 			else:
-				item.setFlags(QtCore.Qt.NoItemFlags)
+				if self.importer:
+					self.disableItem(item)
+				else:
+					self.darkenItem(item)
+				
+
+		# update types header
+		self.typeList.updateNumItems()
 
 		# update the version list
 		self.updateVersionList()
 
 	def disableAllTypes(self):
 		# disable all type items
-		for i in range(self.typeList.tbaList.count()):
-			self.typeList.tbaList.item(i).setFlags(QtCore.Qt.NoItemFlags)
+		if self.importer:
+			for i in range(self.typeList.tbaList.count()):
+				self.disableItem(self.typeList.tbaList.item(i))
+		else:
+			for i in range(self.typeList.tbaList.count()):
+				self.darkenItem(self.typeList.tbaList.item(i))
 
 		# update the version list
 		self.updateVersionList()
+
+	def enableItem(self, item):
+		item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+		item.setTextColor(QtGui.QColor('white'))
+
+	def disableItem(self, item):
+		item.setFlags(QtCore.Qt.NoItemFlags)
+
+	def darkenItem(self, item):
+		item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+		item.setTextColor(QtGui.QColor(50,50,50))
 
 	def updateVersionList(self):
 		# clear all items, will repopulate later in this function
@@ -264,6 +246,9 @@ class exporter(QtWidgets.QWidget):
 			# folder must match format of 'v' then three digits, e.g. v007
 			if re.match("v[0-9]{3}", version):
 				self.versionList.tbaList.addItem(version)
+
+		# update versions header
+		self.versionList.updateNumItems()
 
 	def addAssetDialog(self):
 		name, ok = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 
@@ -338,11 +323,11 @@ class exporter(QtWidgets.QWidget):
 		# assetList2 = TBA_assetList()
 
 		# package list
-		self.packageList = TBA_list()
+		self.packageList = TBA_UI.TBA_list()
 		self.packageList.setHeader('Packages')
 		
 		# asset list
-		self.assetList = TBA_list()
+		self.assetList = TBA_UI.TBA_list()
 		self.assetList.setHeader('Assets')
 		self.assetList.tbaList.currentItemChanged.connect(self.onAssetSelected)
 
@@ -350,13 +335,18 @@ class exporter(QtWidgets.QWidget):
 		self.assetList.createButton.clicked.connect(self.addAssetDialog)
 
 		# type list
-		self.typeList = TBA_list()
+		self.typeList = TBA_UI.TBA_list()
 		self.typeList.setHeader('Types')
 		self.typeList.tbaList.currentItemChanged.connect(self.onTypeSelected)
 
-		# type list
-		self.versionList = TBA_list()
+		# version list
+		self.versionList = TBA_UI.TBA_list()
 		self.versionList.setHeader('Versions')
+		self.versionList.setFooter('Write Version: ')
+		self.versionList.tbaList.currentItemChanged.connect(self.onVersionSelected)
+		
+		self.versionModeToggle = TBA_UI.radioButton()
+		self.versionList.headerLayout.addWidget(self.versionModeToggle)
 
 		# add lists to listsLayout
 		listsLayout.addWidget(self.packageList)

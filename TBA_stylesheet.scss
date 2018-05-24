@@ -23,6 +23,10 @@ QLabel#header {
 	font-size: 16px;
 }
 
+QLabel#footer {
+	font-size: 14px;
+	background-color: $grey-light;
+}
 
 // LIST WIDGETS
 QListWidget {
@@ -35,11 +39,7 @@ QListWidget:focus {
 }
 
 QListWidget::item {
-    color: white;
-}
-
-QListWidget::item:disabled {
-	color: $grey-dark;
+    //color: white;
 }
 
 QListWidget::item:hover {
@@ -48,6 +48,14 @@ QListWidget::item:hover {
 
 QListWidget::item:selected {
     background-color: $primary;
+}
+
+QListWidget::item[labelClass="dark"] {
+    color: red;
+}
+
+QListWidget::item:disabled {
+	color: $grey-dark;
 }
 
 QInputDialog * {
