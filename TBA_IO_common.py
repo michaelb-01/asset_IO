@@ -3,7 +3,11 @@ import os
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
+import TBA_UI
+
 import sqss_compiler
+
+import re
 
 # inherits from QWidget
 class TBA_IO_UI(QtWidgets.QWidget):
@@ -88,21 +92,29 @@ class TBA_list(QtWidgets.QWidget):
 		# set layout
 		self.setLayout(self.mainLayout)
 
-	def header(self, text):
+		# set empty variable for header
+		self.header = None
+
+	def setHeader(self, text):
+		# create header if it doesn't exist
+		if not self.header:
+			self.header = QtWidgets.QLabel(objectName='header')
+
+		self.header.setText(text)
+		# insert the header at 0 index with stretch factor of 1
+		self.headerLayout.insertWidget(0,self.header,1)
+
+	def oldHeader(self, text):
 		header = QtWidgets.QLabel(objectName='header')
 		header.setText(text)
-		self.headerLayout.insertWidget(0,header)
+
+		# insert the header at 0 index with stretch factor of 1
+		self.headerLayout.insertWidget(0,header,1)
 
 	def addCreateButton(self):
-		pixmap = QtGui.QPixmap('plus.png')
-		mask = pixmap.createMaskFromColor( QtCore.Qt.transparent )
-		pixmap.fill('red')
-		pixmap.setMask(mask)
+		self.createButton = TBA_UI.iconButton()
 
-		lbl = QtWidgets.QLabel()
-		lbl.setPixmap(pixmap)
-
-		self.headerLayout.addWidget(lbl)
+		self.headerLayout.addWidget(self.createButton)
 
 class TBA_AssetList(QtWidgets.QWidget):
 	
@@ -119,26 +131,189 @@ class exporter(QtWidgets.QWidget):
 	def __init__(self):
 		super(exporter, self).__init__()
 
-		self.publishDir = 'heellellre'
+		self.publishDir = None
+		self.assetsDir = None
+
+		# selected items
+		self.selPackage = None
+		self.selAsset = None
+		self.selType = None
+		self.selVersion = None
+
 		print 'init exporter'
+
+		self.getPublishDir()
+
+		if not self.publishDir or not self.assetsDir:
+			print 'could not find correct _published3d/assets folder, exiting'
+			QtCore.QCoreApplication.quit
+			return
 		
 		self.initUI()
-		self.getPublishDir()
-		self.initPackages()
-		self.initAssets()
+		self.initPackageList()
+		self.initAssetList()
+		self.initTypeList()
 
 	def getPublishDir(self):
 		# this function would look up the _published3d directory relative to the scene
 		currentDir = os.path.dirname(os.path.realpath(__file__))
-		self.publishDir = os.path.join(currentDir, '_published3d')
+		publishDir = os.path.join(currentDir, '_published3d')
 
-	def initPackages(self):
-		print 'init packges'
-		print self.publishDir
+		self.publishDir = publishDir
+		self.assetsDir = os.path.join(self.publishDir, 'assets')
 
-	def initAssets(self):
+	def initPackageList(self):
+		packageDir = os.path.join(self.publishDir, 'packages')
+
+		# exit if packages directory can't be found
+		if not os.path.isdir(packageDir):
+			return
+
+		# get packages from dir
+		packages = sorted(os.listdir(packageDir))
+
+		# add packages to package list
+		for package in packages:
+			self.packageList.tbaList.addItem(package)
+
+	def initAssetList(self):
 		print 'init assets'
-		self.assetList.tbaList.addItem('test')
+		#self.assetList.tbaList.addItem('test')
+
+		# get assets from dir
+		assets = sorted(os.listdir(self.assetsDir))
+
+		# add assets to asset list
+		for asset in assets:
+			self.assetList.tbaList.addItem(asset)
+
+	def initTypeList(self):
+		types = ['camera', 'model', 'anim', 'fx', 'rig', 'light', 'shaders']
+		for item in types:
+			self.typeList.tbaList.addItem(item)
+
+		self.updateTypeList()
+
+	def onAssetSelected(self, item):
+		self.selAsset = item.text()
+		self.updateTypeList()
+
+	def onTypeSelected(self, item):
+		print 'type selected'
+		self.selType = item.text()
+		self.updateVersionList()
+
+	def updateTypeList(self):
+		# if no asset is selected disable types and return
+		if not self.selAsset:
+			self.disableAllTypes()
+			return
+
+		# asset directory
+		assetDir = os.path.join(self.assetsDir, self.selAsset)
+
+		# if asset path does not exist
+		if not os.path.isdir(assetDir):
+			self.disableAllTypes()
+			return
+		
+		# list folders inside assetDir
+		types = sorted(os.listdir(assetDir))
+
+		# iterate over types and disable if not found
+		for i in range(self.typeList.tbaList.count()):
+			item = self.typeList.tbaList.item(i)
+		 
+			if item.text() in types:
+				# enable item and make it selectable
+				item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+			else:
+				item.setFlags(QtCore.Qt.NoItemFlags)
+
+		# update the version list
+		self.updateVersionList()
+
+	def disableAllTypes(self):
+		# disable all type items
+		for i in range(self.typeList.tbaList.count()):
+			self.typeList.tbaList.item(i).setFlags(QtCore.Qt.NoItemFlags)
+
+		# update the version list
+		self.updateVersionList()
+
+	def updateVersionList(self):
+		# clear all items, will repopulate later in this function
+		self.versionList.tbaList.clear()
+
+		# if no type is selected remove all versions from the list and return
+		if not self.selType:
+			return
+
+		# type directory
+		typeDir = os.path.join(self.assetsDir, self.selAsset, self.selType)
+
+		# if type directory does not exist clear and return
+		if not os.path.isdir(typeDir):
+			return
+
+		# list version folders inside typeDir
+		versions = sorted(os.listdir(typeDir))
+
+		# iterate over folders and add to version list if named correctly
+		for version in versions:
+			# folder must match format of 'v' then three digits, e.g. v007
+			if re.match("v[0-9]{3}", version):
+				self.versionList.tbaList.addItem(version)
+
+	def addAssetDialog(self):
+		name, ok = QtWidgets.QInputDialog.getText(self, 'Input Dialog', 
+			'Enter your name:')
+		
+		if ok:
+			#self.le.setText(str(text))
+			if len(self.assetList.tbaList.findItems(name, QtCore.Qt.MatchRegExp)) == 0:
+				self.assetList.tbaList.addItem(name)
+
+	# handles key events for navigating left and right between lists
+	def keyPressEvent(self, event):
+		print 'key pressed'
+		key = event.key()
+
+		if key == QtCore.Qt.Key_Right:
+			# if 'active' list is selType select last version
+			if self.selType:
+				num = self.versionList.tbaList.count()
+				if num == 0:
+					return
+				item = self.versionList.tbaList.item(num-1)
+				self.versionList.tbaList.setCurrentItem(item)
+				self.selVersion = item.text()
+				self.versionList.tbaList.setFocus()
+			elif self.selAsset:
+				# select first selectable item
+				for i in range(self.typeList.tbaList.count()):
+					if self.typeList.tbaList.item(i).flags() & QtCore.Qt.ItemIsSelectable:
+						self.typeList.tbaList.setCurrentRow(i)
+						self.typeList.tbaList.setFocus()
+						return
+			else:
+				# select first selectable item
+				for i in range(self.assetList.tbaList.count()):
+					if self.assetList.tbaList.item(i).flags() & QtCore.Qt.ItemIsSelectable:
+						self.assetList.tbaList.setCurrentRow(i)
+						self.assetList.tbaList.setFocus()
+						return
+		elif key == QtCore.Qt.Key_Left:
+			if self.selVersion:
+				self.typeList.tbaList.setFocus()
+				self.selVersion = None
+				self.updateVersionList()
+			elif self.selType:
+				self.assetList.tbaList.setFocus()
+				self.selType = None
+				# deselect all
+				self.typeList.tbaList.setCurrentRow(-1)
+				self.updateTypeList()
 
 	def initUI(self):      		
 		self.setObjectName("tbaDark")
@@ -163,38 +338,31 @@ class exporter(QtWidgets.QWidget):
 		# assetList2 = TBA_assetList()
 
 		# package list
-		packageList = TBA_list()
-		packageList.header('Packages')
-		packageList.tbaList.addItem('jellyMan')
+		self.packageList = TBA_list()
+		self.packageList.setHeader('Packages')
 		
 		# asset list
 		self.assetList = TBA_list()
-		self.assetList.header('Assets')
+		self.assetList.setHeader('Assets')
+		self.assetList.tbaList.currentItemChanged.connect(self.onAssetSelected)
 
 		self.assetList.addCreateButton()
-
-		#self.assetList = TBA_list()
-
-		# for item in ['shoes', 'legs', 'clothes']:
-		# 	assetList.tbaList.addItem(item)
+		self.assetList.createButton.clicked.connect(self.addAssetDialog)
 
 		# type list
-		typeList = TBA_list()
-		typeList.header('Types')
-		for item in ['camera', 'model', 'anim', 'fx', 'rig', 'light', 'shader']:
-			typeList.tbaList.addItem(item)
+		self.typeList = TBA_list()
+		self.typeList.setHeader('Types')
+		self.typeList.tbaList.currentItemChanged.connect(self.onTypeSelected)
 
 		# type list
-		versionList = TBA_list()
-		versionList.header('Versions')
-		for item in ['v001', 'v002', 'v003', 'v004', 'v005']:
-			versionList.tbaList.addItem(item)
+		self.versionList = TBA_list()
+		self.versionList.setHeader('Versions')
 
 		# add lists to listsLayout
-		listsLayout.addWidget(packageList)
+		listsLayout.addWidget(self.packageList)
 		listsLayout.addWidget(self.assetList)
-		listsLayout.addWidget(typeList)
-		listsLayout.addWidget(versionList)
+		listsLayout.addWidget(self.typeList)
+		listsLayout.addWidget(self.versionList)
 
 		# add listsLayout to mainLayout
 		mainLayout.addLayout(listsLayout)
