@@ -5,7 +5,7 @@
 
 QWidget {
 	background-color: $grey;
-	border: 0px;
+  border: 0px;
 }
 
 QWidget#tbaDark {
@@ -81,4 +81,39 @@ QToolTip {
   padding: 0px;
   border-radius: 3px;
 }
+
+// COMBOBOX (DROPDOWN)
+QComboBox {
+  background-color: rgba(0,0,0,0);
+  padding: 5px;
+}
+
+QComboBox:drop-down {
+  font-weight: bold;
+  border: 0px;
+  border-radius: 4px;
+  width: 24px;  
+  max-height: 44px;
+}
+
+QComboBox:down-arrow {
+  image: url('./images/arrow_drop_down_black_36.png'); 
+  width: 24px; 
+  height: 24px;
+}
+
+QComboBox::indicator{
+  display: hidden;
+  width: 0px;
+  height: 0px;
+}
+
+QListView { 
+  background-color: red;
+  padding: 10px;
+}
+
+
+// FRAME
+
 
