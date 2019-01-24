@@ -1,17 +1,38 @@
 import sys
 import os
+import re
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
 import TBA_UI
-
 import sqss_compiler
 
-import re
+sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
-class exporter(QtWidgets.QWidget):
+# ----------------------------------------------------------------------
+# Environment detection
+# ----------------------------------------------------------------------
 
-	def __init__(self):
+try:
+    import maya.cmds as cmds
+    MAYA = True
+except ImportError:
+    MAYA = False
+
+try:
+    import nuke
+    import nukescripts
+    NUKE = True
+except ImportError:
+    NUKE = False
+
+STANDALONE = False
+if not MAYA and not NUKE:
+    STANDALONE = True
+
+class exporter(QtWidgets.QDialog):
+
+	def __init__(self, parent=None):
 		super(exporter, self).__init__()
 
 		# are we importer or exporter?
@@ -26,8 +47,6 @@ class exporter(QtWidgets.QWidget):
 		self.selAsset = None
 		self.selType = None
 		self.selVersion = None
-
-		print 'init exporter'
 
 		self.getPublishDir()
 
@@ -81,11 +100,8 @@ class exporter(QtWidgets.QWidget):
 		self.updateTypeList()
 
 	def onPackageSelected(self, item):
-		print 'package selected ' + item.text()
-		if not item:
-			return
-
-		self.selPackage = item.text()
+		if item:
+			self.selPackage = item.text()
 
 	def onAssetSelected(self, item):
 		if not item:
