@@ -16,10 +16,10 @@ class iconButton(QtWidgets.QWidget):
 			self.hoverColour = hoverColour
 		else:
 			self.hoverColour = primary
-		
-		self.initUI()		
 
-	def initUI(self):    
+		self.initUI()
+
+	def initUI(self):
 		# create main layout and set margin to 0
 		mainLayout = QtWidgets.QVBoxLayout()
 		mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -71,10 +71,10 @@ class radioButton(QtWidgets.QWidget):
 			self.hoverColour = hoverColour
 		else:
 			self.hoverColour = primary
-		
-		self.initUI()		
 
-	def initUI(self):    
+		self.initUI()
+
+	def initUI(self):
 		# create main layout and set margin to 0
 		mainLayout = QtWidgets.QVBoxLayout()
 		mainLayout.setContentsMargins(20, 20, 20, 20)
@@ -122,48 +122,48 @@ class radioButton(QtWidgets.QWidget):
 		paint.drawEllipse(3, 3, width, width)
 
 class TBA_list(QtWidgets.QWidget):
-	
+
 	def __init__(self):
 		super(TBA_list, self).__init__()
-		
-		self.numItems = 0
-		self.headerText = ''
 
-		self.initUI()
-
-	def initUI(self):    
 		self.setObjectName("tbaList")
 
-		# create a layout
-		self.mainLayout = QtWidgets.QVBoxLayout()
-		margin = 0
-		self.mainLayout.setContentsMargins(margin, margin, margin, margin)
-		self.mainLayout.setSpacing(0)
-
-		# create header, content and footer layouts
-		# header
-		self.headerLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.headerLayout)
-		# content
-		self.contentLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.contentLayout)
-		# footer
-		self.footerLayout = QtWidgets.QHBoxLayout()
-		self.mainLayout.addLayout(self.footerLayout)
-
-		# create list widget
-		self.tbaList = QtWidgets.QListWidget(self)
-
-		# add list to content layout
-		self.contentLayout.addWidget(self.tbaList)
-
-		# set layout
-		self.setLayout(self.mainLayout)
+		self.numItems = 0
+		self.headerText = ''
 
 		# set empty variable for header
 		self.header = None
 		self.footer = None
 
+		self.create_widgets()
+		self.create_layouts()
+		self.create_connections()
+
+	def create_widgets(self):
+		# create list widget
+		self.tbaList = QtWidgets.QListWidget(self)
+
+	def create_layouts(self):
+		main_layout = QtWidgets.QVBoxLayout(self)
+		margin = 0
+		main_layout.setContentsMargins(margin, margin, margin, margin)
+		main_layout.setSpacing(0)
+
+		# create header, content and footer layouts
+		# header
+		self.headerLayout = QtWidgets.QHBoxLayout()
+		main_layout.addLayout(self.headerLayout)
+		# content
+		self.contentLayout = QtWidgets.QHBoxLayout()
+		main_layout.addLayout(self.contentLayout)
+		# footer
+		self.footerLayout = QtWidgets.QHBoxLayout()
+		main_layout.addLayout(self.footerLayout)
+
+		# add list to content layout
+		self.contentLayout.addWidget(self.tbaList)
+
+	def create_connections(self):
 		# update header when an item changes or items are inserted or removed
 		#self.tbaList.currentItemChanged.connect(self.onItemChanged)
 		self.tbaList.model().rowsInserted.connect(self.itemAdded)
@@ -184,7 +184,7 @@ class TBA_list(QtWidgets.QWidget):
 			self.updateNumItems()
 
 	def setFooter(self, text):
-		print 'set footer text'
+		print('set footer text')
 		if not self.footer:
 			self.footer = QtWidgets.QLabel(objectName='footer')
 
@@ -207,7 +207,7 @@ class TBA_list(QtWidgets.QWidget):
 		for i in range(self.tbaList.count()):
 			if self.tbaList.item(i).flags() & QtCore.Qt.ItemIsSelectable:
 				num += 1
-				
+
 		self.header.setText(self.headerText + ' (' + str(num) + ')')
 
 	def itemAdded(self, itemIndex):

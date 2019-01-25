@@ -18,7 +18,6 @@ class StretchedLabel(QtWidgets.QLabel):
         self.setGeometry(QtCore.QRect(0,0,100,20))
 
     def resizeEvent(self, evt):
-
         #print self.height()
         font = self.font()
         #print font.pixelSize()
@@ -28,7 +27,7 @@ class StretchedLabel(QtWidgets.QLabel):
 class StretchedLabel2(QtWidgets.QLabel):
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self, *args, **kwargs)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        #self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
 
     def resizeEvent(self, evt):
         font = self.font()
@@ -50,12 +49,12 @@ class TBAInput(QtWidgets.QWidget):
 
     def create_widgets(self):
         # self.label = QtWidgets.QLabel('Name')
-        self.label = StretchedLabel2('Name')
+        self.label = QtWidgets.QLabel('Name')
         #self.label.setStyleSheet("QWidget { background-color: rgb(255, 198, 201); }")
         # self.label.setGeometry(self.label_pos1)
         self.lineedit = QtWidgets.QLineEdit()
         self.btn = QtWidgets.QPushButton('Animate')
-                
+
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QVBoxLayout(self)
@@ -63,7 +62,7 @@ class TBAInput(QtWidgets.QWidget):
         main_layout.addWidget(self.label)
         main_layout.addWidget(self.lineedit)
         main_layout.addWidget(self.btn)
-        
+
     def create_connections(self):
       self.btn.clicked.connect(self.animate_label)
 
@@ -79,29 +78,28 @@ class TBAInput(QtWidgets.QWidget):
       # self.timer.start()
 
     def tick(self):
-      print 'tick'
+      print('tick')
       self.label.move(self.label.pos() + QtCore.QPoint(0, 1))
-      print self.timer.remainingTime()
+      print(self.timer.remainingTime())
 
     def animate_label(self):
-      self.move_anim = QtCore.QPropertyAnimation(self.label, "geometry")
-      self.move_anim.setDuration(150)
+      self.anim = QtCore.QPropertyAnimation(self,"color")
+      # self.move_anim.setDuration(150)
 
-      rect = self.label.geometry()
-      
+      # rect = self.label.geometry()
 
-      if self.toggled:
-        size = 10
-      else:
-        size = 20
+      # if self.toggled:
+      #   size = 10
+      # else:
+      #   size = 20
 
-      self.toggled = not self.toggled
+      # self.toggled = not self.toggled
 
-      print("Animate from {0} to {1}".format(rect.height(), size))
+      # print("Animate from {0} to {1}".format(rect.height(), size))
 
-      self.move_anim.setStartValue(QtCore.QRect(0, 0, 100, rect.height()))
-      self.move_anim.setEndValue(QtCore.QRect(0, 0, 100, size))
-      self.move_anim.setEasingCurve(QtCore.QEasingCurve.InOutCubic)
+      # self.move_anim.setStartValue(QtCore.QRect(0, 0, 100, rect.height()))
+      # self.move_anim.setEndValue(QtCore.QRect(0, 0, 100, size))
+      # self.move_anim.setEasingCurve(QtCore.QEasingCurve.InOutCubic)
 
       self.move_anim.start()
 
@@ -110,13 +108,13 @@ class MyDialog(QtWidgets.QDialog):
     # this means the widget will stay on top of maya
     def __init__(self, parent=None):
         super(MyDialog, self).__init__(parent)
-        
+
         self.setWindowTitle('Modal Dialogs')
         self.setMinimumSize(300,80)
-        
-        # remove help icon (question mark) from window 
+
+        # remove help icon (question mark) from window
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        
+
         # create widgets, layouts and connections (signals and slots)
         self.create_widgets()
         self.create_layouts()
@@ -125,20 +123,20 @@ class MyDialog(QtWidgets.QDialog):
     def create_widgets(self):
         self.close_btn = QtWidgets.QPushButton('Close')
         self.name_input = TBAInput()
-                
+
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QVBoxLayout(self)
-        
+
         wdg_layout = QtWidgets.QHBoxLayout()
         wdg_layout.addWidget(self.name_input)
         wdg_layout.addWidget(self.close_btn)
 
         main_layout.addLayout(wdg_layout)
-        
+
     def create_connections(self):
         self.close_btn.clicked.connect(self.close)
-        
+
 def run_standalone():
 
     app = QtWidgets.QApplication(sys.argv)
@@ -150,4 +148,4 @@ def run_standalone():
 
 if __name__ == "__main__":
   run_standalone()
-    
+

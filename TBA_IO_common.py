@@ -51,7 +51,7 @@ class exporter(QtWidgets.QDialog):
 		self.getPublishDir()
 
 		if not os.path.isdir(self.publishDir) or not os.path.isdir(self.assetsDir):
-			print 'could not find correct _published3d/assets folder, exiting'
+			print('could not find correct _published3d/assets folder, exiting')
 			QtCore.QCoreApplication.exit()
 			return
 
@@ -130,7 +130,7 @@ class exporter(QtWidgets.QDialog):
 			self.versionList.footer.setText('Write Version: ' + item.text())
 		else:
 			self.versionList.footer.setText('Write Version: ')
-		print 'version selected'
+		print('version selected')
 
 	def updateTypeList(self):
 		# if this is the importer UI we need to filter by exported types
@@ -147,14 +147,14 @@ class exporter(QtWidgets.QDialog):
 		if not os.path.isdir(assetDir):
 			self.disableAllTypes()
 			return
-		
+
 		# list folders inside assetDir
 		types = sorted(os.listdir(assetDir))
 
 		# iterate over types and disable if not found
 		for i in range(self.typeList.tbaList.count()):
 			item = self.typeList.tbaList.item(i)
-		 
+
 			# if we are in the importer set the selectability of the item
 			# else just change the colour to illustrate what has already been exported
 			if item.text() in types:
@@ -164,7 +164,7 @@ class exporter(QtWidgets.QDialog):
 					self.disableItem(item)
 				else:
 					self.darkenItem(item)
-				
+
 
 		# update types header
 		self.typeList.updateNumItems()
@@ -223,16 +223,16 @@ class exporter(QtWidgets.QDialog):
 		self.versionList.updateNumItems()
 
 	def addAssetDialog(self):
-		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Asset', 
+		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Asset',
 			'Asset Name:')
-		
+
 		if ok:
 			if len(self.assetList.tbaList.findItems(name, QtCore.Qt.MatchRegExp)) == 0:
 				self.assetList.tbaList.addItem(name)
 
 	def addToPackage(self, new):
 		if not self.selPackage:
-			print 'package not selected, exiting'
+			print('package not selected, exiting')
 			return
 
 		# make sure 'packages' folder exists
@@ -254,16 +254,16 @@ class exporter(QtWidgets.QDialog):
 		typeDir = os.path.join(assetDir, self.selType)
 		version = os.path.join(self.assetsDir, self.selAsset, self.selType, self.selVersion)
 
-		print 'Link ' + version + ' to ' + typeDir
+		print('Link ' + version + ' to ' + typeDir)
 
 		if os.path.islink(typeDir):
-			print 'UNLINKING ' + typeDir
+			print('UNLINKING ' + typeDir)
 			os.unlink(typeDir)
 
 		os.symlink(version, typeDir)
 
 		msgBox = QtWidgets.QMessageBox()
-		msgBox.setText('Added ' + self.selAsset + '-' + self.selType + '-' + self.selVersion + 
+		msgBox.setText('Added ' + self.selAsset + '-' + self.selType + '-' + self.selVersion +
 			' to ' + self.selPackage + ' package: \n' + typeDir)
 		msgBox.exec_()
 
@@ -279,12 +279,12 @@ class exporter(QtWidgets.QDialog):
 			return
 
 		# if package is not selected we need to make one
-		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Package', 
+		name, ok = QtWidgets.QInputDialog.getText(self, 'Create New Package',
 			'Package Name:')
 
 		if ok:
 			if len(self.packageList.tbaList.findItems(name, QtCore.Qt.MatchRegExp)) == 0:
-				print 'add package and select'
+				print('add package and select')
 				self.packageList.tbaList.addItem(name)
 				self.selPackage = name
 				self.packageList.tbaList.setCurrentRow(self.packageList.tbaList.count()-1)
@@ -294,7 +294,7 @@ class exporter(QtWidgets.QDialog):
 
 	# handles key events for navigating left and right between lists
 	def keyPressEvent(self, event):
-		print 'key pressed'
+		print('key pressed')
 		key = event.key()
 
 		if key == QtCore.Qt.Key_Right:
@@ -333,8 +333,8 @@ class exporter(QtWidgets.QDialog):
 				self.typeList.tbaList.setCurrentRow(-1)
 				self.updateTypeList()
 
-	def initUI(self):      		
-		self.setObjectName("tbaDark")
+	def initUI(self):
+		#self.setObjectName("tbaDark")
 
 		# create window on inherited widget
 		self.setWindowTitle('TBA Exporter')
@@ -387,7 +387,7 @@ class exporter(QtWidgets.QDialog):
 		self.versionList.footer.setStyleSheet('background-color:rgb(100,105,115)')
 
 		self.versionList.tbaList.currentItemChanged.connect(self.onVersionSelected)
-		
+
 		self.versionModeToggle = TBA_UI.radioButton()
 		self.versionList.headerLayout.addWidget(self.versionModeToggle)
 
@@ -410,7 +410,7 @@ class exporter(QtWidgets.QDialog):
 		qr = self.frameGeometry()
 		cp = QtWidgets.QDesktopWidget().availableGeometry().center()
 		qr.moveCenter(cp)
-		self.move(qr.topLeft()) 
+		self.move(qr.topLeft())
 
 def main():
 	app = QtWidgets.QApplication(sys.argv)

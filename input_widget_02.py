@@ -1,48 +1,65 @@
 import sys
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtWidgets
+from shiboken2 import wrapInstance
 
-class exporter(QtWidgets.QDialog):
+try:
+  import maya.OpenMayaUI as omui
+except:
+  print('Not in Maya')
 
-  def __init__(self, parent=None):
-    super(exporter, self).__init__()
+def maya_main_window():
+    # get pointer to maya's main window
+    main_window_ptr = omui.MQtUtil.mainWindow()
+    # return window as a QWidget
+    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
-    # create window on inherited widget
-    self.setWindowTitle('TBA Exporter')
 
-    self.resize(800, 300)
+class MyDialog(QtWidgets.QDialog):
+    # set parent of widget as maya's main window
+    # this means the widget will stay on top of maya
+    def __init__(self, parent=None):
+        super(MyDialog, self).__init__(parent)
 
-    # create widgets, layouts and connections (signals and slots)
-    self.create_widgets()
-    self.create_layouts()
-    self.create_connections()
+        self.setWindowTitle('Modal Dialogs')
+        self.setMinimumSize(300,80)
 
-    self.show()
+        # remove help icon (question mark) from window
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
-  def create_widgets(self):
-      self.close_btn = QtWidgets.QPushButton('Close')
-              
-  def create_layouts(self):
-      # self must be passed to the main_layout so it is parented to the dialog instance
-      main_layout = QtWidgets.QVBoxLayout(self)
-      
-      wdg_layout = QtWidgets.QHBoxLayout()
-      wdg_layout.addStretch()
-      wdg_layout.addWidget(self.close_btn)
+        # create widgets, layouts and connections (signals and slots)
+        self.create_widgets()
+        self.create_layouts()
+        self.create_connections()
 
-      main_layout.addLayout(wdg_layout)
-      # set mainLayout as the main layout
-      self.setLayout(main_layout)
-      
-  def create_connections(self):
-      self.close_btn.clicked.connect(self.close)
+    def create_widgets(self):
+        self.label = QtWidgets.QLabel('Name')
+        self.anim_btn = QtWidgets.QPushButton('Animate')
 
-def main():
-  app = QtWidgets.QApplication(sys.argv)
+    def create_layouts(self):
+        # self must be passed to the main_layout so it is parented to the dialog instance
+        main_layout = QtWidgets.QVBoxLayout(self)
 
-  tba = exporter()
+        wdg_layout = QtWidgets.QHBoxLayout()
+        wdg_layout.addWidget(self.label)
+        wdg_layout.addWidget(self.anim_btn)
 
-  sys.exit(app.exec_())
+        main_layout.addLayout(wdg_layout)
 
-if __name__ == '__main__':
-  main()
+    def create_connections(self):
+        self.anim_btn.clicked.connect(self.animate)
+
+    def animate(self):
+        print('Animate')
+        self.anim = QtCore.QPropertyAnimation(self.label, 'geometry')
+
+def run_standalone():
+    app = QtWidgets.QApplication(sys.argv)
+
+    my_dialog = MyDialog()
+
+    my_dialog.show()  # Show the UI
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+  run_standalone()

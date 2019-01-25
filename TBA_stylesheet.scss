@@ -1,6 +1,8 @@
-* { 
-	font-family: "Roboto", Times, serif;
-	font-weight: light;
+* {
+	//font-family: "Roboto", Times, serif;
+	//font-weight: light;
+  font-size: 10pt;
+  color:$grey-lighter;
 }
 
 QWidget {
@@ -14,8 +16,14 @@ QWidget#tbaDark {
 
 QWidget#tbaList * {
 	padding: 10px;
-	background-color: $grey;
+	background-color: $grey-dark;
 	color: white;
+}
+
+// LINE EDIT
+QLineEdit {
+  background-color: $grey-dark;
+  padding: 10px;
 }
 
 // LABELS
@@ -25,6 +33,11 @@ QLabel#header {
 
 QLabel#footer {
 	font-size: 14px;
+}
+
+// QPlainTextEdit
+QPlainTextEdit {
+  background-color: $grey-dark;
 }
 
 // LIST WIDGETS
@@ -38,7 +51,7 @@ QListWidget:focus {
 }
 
 QListWidget::item {
-    //color: white;
+  //color: white;
 }
 
 QListWidget::item:hover {
@@ -84,7 +97,7 @@ QToolTip {
 
 // COMBOBOX (DROPDOWN)
 QComboBox {
-  background-color: rgba(0,0,0,0);
+  background-color: $grey-dark;
   padding: 5px;
 }
 
@@ -92,13 +105,13 @@ QComboBox:drop-down {
   font-weight: bold;
   border: 0px;
   border-radius: 4px;
-  width: 24px;  
+  width: 24px;
   max-height: 44px;
 }
 
 QComboBox:down-arrow {
-  image: url('./images/arrow_drop_down_black_36.png'); 
-  width: 24px; 
+  image: url('./images/arrow_drop_down_black_36.png');
+  width: 24px;
   height: 24px;
 }
 
@@ -107,9 +120,9 @@ QComboBox::indicator{
   width: 0px;
   height: 0px;
 }
-
-QListView { 
-  background-color: red;
+// qcombobox item
+QListView {
+  background-color: $grey;
   padding: 10px;
 }
 
@@ -117,3 +130,23 @@ QListView {
 // FRAME
 
 
+// Radio Button
+QRadioButton {
+  color:  $grey-lighter;
+}
+
+QRadioButton::indicator {
+  width:                  10px;
+  height:                 10px;
+  border-radius:          7px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: green;
+    border: 2px solid red;
+}
+
+QRadioButton::indicator:unchecked {
+    background-color:       black;
+    border:                 2px solid white;
+}
