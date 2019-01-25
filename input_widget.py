@@ -14,12 +14,25 @@ def maya_main_window():
 class StretchedLabel(QtWidgets.QLabel):
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self, *args, **kwargs)
-        # self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
+        #self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        self.setGeometry(QtCore.QRect(0,0,100,20))
 
     def resizeEvent(self, evt):
-        print 'resize'
+
+        #print self.height()
         font = self.font()
-        font.setPixelSize(self.height() * 1.2)
+        #print font.pixelSize()
+        font.setPixelSize(self.height())
+        self.setFont(font)
+
+class StretchedLabel2(QtWidgets.QLabel):
+    def __init__(self, *args, **kwargs):
+        QtWidgets.QLabel.__init__(self, *args, **kwargs)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+
+    def resizeEvent(self, evt):
+        font = self.font()
+        font.setPixelSize(self.height() * 0.8)
         self.setFont(font)
 
 class TBAInput(QtWidgets.QWidget):
@@ -33,10 +46,12 @@ class TBAInput(QtWidgets.QWidget):
 
         label_pos1 = QtCore.QRect(0, 0, 100, 30)
 
+        self.toggled = False
+
     def create_widgets(self):
         # self.label = QtWidgets.QLabel('Name')
-        self.label = StretchedLabel('Name')
-        self.label.setStyleSheet("QWidget { background-color: rgb(255, 198, 201); }")
+        self.label = StretchedLabel2('Name')
+        #self.label.setStyleSheet("QWidget { background-color: rgb(255, 198, 201); }")
         # self.label.setGeometry(self.label_pos1)
         self.lineedit = QtWidgets.QLineEdit()
         self.btn = QtWidgets.QPushButton('Animate')
@@ -70,17 +85,25 @@ class TBAInput(QtWidgets.QWidget):
 
     def animate_label(self):
       self.move_anim = QtCore.QPropertyAnimation(self.label, "geometry")
-      self.move_anim.setDuration(200)
+      self.move_anim.setDuration(150)
 
       rect = self.label.geometry()
+      
 
-      self.move_anim.setStartValue(rect)
-      self.move_anim.setEndValue(rect + QtCore.QMargins(0, 0, -130, 0))
+      if self.toggled:
+        size = 10
+      else:
+        size = 20
+
+      self.toggled = not self.toggled
+
+      print("Animate from {0} to {1}".format(rect.height(), size))
+
+      self.move_anim.setStartValue(QtCore.QRect(0, 0, 100, rect.height()))
+      self.move_anim.setEndValue(QtCore.QRect(0, 0, 100, size))
       self.move_anim.setEasingCurve(QtCore.QEasingCurve.InOutCubic)
 
       self.move_anim.start()
-
-      print(self.label.pos())
 
 class MyDialog(QtWidgets.QDialog):
     # set parent of widget as maya's main window
