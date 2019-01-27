@@ -70,6 +70,10 @@ class TBAAssetExporter(QtWidgets.QDialog):
     def show_dialog(cls):
         if not cls.dlg_instance:
             cls.dlg_instance = TBAAssetExporter(maya_main_window())
+            cls.dlg_instance.setStyleSheet(sqss_compiler.compile(
+                '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
+                '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+            ))
 
         if cls.dlg_instance.isHidden():
             cls.dlg_instance.show()
@@ -269,9 +273,11 @@ class TBAAssetExporter(QtWidgets.QDialog):
             items = self.assetList.tbaList.findItems(name, QtCore.Qt.MatchExactly)
 
             if items:
+                print('updateTempAssetName, REMOVE ASSET NAME')
                 self.removeTempAsset()
-
-            self.addTempAsset(name)
+                self.assetList.tbaList.setCurrentItem(items[0])
+            else:
+                self.addTempAsset(name)
 
     def addTempAsset(self, e):
         # set temp asset item with user data
@@ -311,9 +317,9 @@ class TBAAssetExporter(QtWidgets.QDialog):
                 self.tempAsset = False
 
                 # set selected row before deleting, otherwise seg fault
-                #self.assetList.tbaList.setCurrentRow(i-1)
-                #item = self.assetList.tbaList.takeItem(i)
-                #item = None
+                self.assetList.tbaList.setCurrentRow(i-1)
+                item = self.assetList.tbaList.takeItem(i)
+                item = None
 
         # reset selected color to original 
         self.assetList.tbaList.setStyleSheet('QListWidget::item:selected { background-color: ' + str(self.PRIMARY) + ' }')
@@ -790,7 +796,10 @@ def run_maya():
 def run_standalone():
     print('TBA :: Run Standalone')
     app = QtWidgets.QApplication(sys.argv)
-    app.setStyleSheet(sqss_compiler.compile('TBA_stylesheet.scss', 'variables.scss'))
+    app.setStyleSheet(sqss_compiler.compile(
+        '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
+        '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+    ))
     # app.setStyleSheet('TBA_stylesheet.scss')
     #app.setStyleSheet("QLineEdit { background-color: yellow }")
 
