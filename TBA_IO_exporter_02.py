@@ -36,6 +36,59 @@ if not MAYA and not NUKE:
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
+class TBAExportResultsDialog(QtWidgets.QDialog):
+    def __init__(self, exportResults, parent=None):
+        super(TBAExportResultsDialog, self).__init__(parent)
+        
+        self.setStyleSheet(sqss_compiler.compile(
+            '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
+            '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+        ))
+
+        self.exportResults = exportResults
+        print(self.exportResults)
+        print(len(self.exportResults))
+
+        self.setWindowTitle("Custom Dialog")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+        self.create_widgets()
+        self.create_layout()
+        self.create_connections()
+
+    def create_widgets(self):
+        self.export_label = QtWidgets.QLabel('Export Successfull')
+        self.export_btn = QtWidgets.QPushButton('Open')
+
+        self.publish_label = QtWidgets.QLabel('Publish Successfull')
+        self.publish_btn = QtWidgets.QPushButton('Open')
+
+    def create_layout(self):
+        export_layout = QtWidgets.QHBoxLayout()
+        export_layout.addWidget(self.export_label)
+        export_layout.addWidget(self.export_btn)
+
+        main_layout = QtWidgets.QVBoxLayout(self)
+
+        main_layout.addLayout(export_layout)
+
+        if len(self.exportResults) > 1:
+            publish_layout = QtWidgets.QHBoxLayout()
+            publish_layout.addWidget(self.publish_label)
+            publish_layout.addWidget(self.publish_btn)
+
+            main_layout.addLayout(publish_layout)
+
+    def create_connections(self):
+        self.export_btn.clicked.connect(self.exploreExportedFile)
+        self.publish_btn.clicked.connect(self.explorePublishedFile)
+
+    def exploreExportedFile(self):
+        subprocess.Popen(["open", self.exportResults[0]])
+
+    def explorePublishedFile(self):
+        subprocess.Popen(["open", self.exportResults[1]])
+
 class TBAAssetExporter(QtWidgets.QDialog):
     TYPES = ['camera', 'model', 'anim', 'fx', 'rig', 'light', 'shaders']
     DARK_COLOUR = QtGui.QColor(80,85,95)
@@ -703,11 +756,23 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
         exportDir = os.path.join(self.exportDir, 'assets', self.selAsset, self.selType, exportVersion)
 
+        exportResults = []
+        exportResults.append(exportDir)
+
         self.exportAssetJsonFile(exportDir, exportVersion)
 
         if self.publish_cb.isChecked():
             exportDir = os.path.join(self.publishDir, 'assets', self.selAsset, self.selType, exportVersion)
+            exportResults.append(exportDir)
+
             self.exportAssetJsonFile(exportDir, exportVersion)
+
+        print('\n\n\nEXPORT RESULTS')
+        print(exportResults)
+
+        results_dialog = TBAExportResultsDialog(exportResults)
+
+        result = results_dialog.exec_()
 
     def exportAssetJsonFile(self, exportDir, assetVersion, dryRun=False):
         print('exportAssetJsonFile')

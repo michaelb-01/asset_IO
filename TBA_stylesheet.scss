@@ -80,7 +80,7 @@ QListWidget::item:disabled {
 
 // BUTTONS
 QPushButton * {
-  color: red;
+  background-color: $grey-dark;
 }
 
 QPushButton:hover {
