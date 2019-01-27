@@ -1,7 +1,7 @@
 * {
 	//font-family: "Roboto", Times, serif;
 	//font-weight: light;
-  font-size: 10pt;
+  font-size: 11pt;
   color:$grey-lighter;
 }
 
@@ -12,6 +12,10 @@ QWidget {
 
 QWidget#tbaDark {
 	background-color: $grey-dark;
+}
+
+QWidget#tbaLight {
+  background-color: $grey-light;
 }
 
 QWidget#tbaList * {
@@ -27,13 +31,13 @@ QLineEdit {
 }
 
 // LABELS
-QLabel#header {
-	font-size: 15px;
-}
+// QLabel#header {
+// 	font-size: 15px;
+// }
 
-QLabel#footer {
-	font-size: 14px;
-}
+// QLabel#footer {
+// 	font-size: 14px;
+// }
 
 // QPlainTextEdit
 QPlainTextEdit {
@@ -43,15 +47,10 @@ QPlainTextEdit {
 // LIST WIDGETS
 QListWidget {
   padding: 10px;
-  background-color: red;
 }
 
 QListWidget:focus {
   outline: 0px;
-}
-
-QListWidget::item {
-  //color: white;
 }
 
 QListWidget::item:hover {
@@ -62,21 +61,34 @@ QListWidget::item:selected {
     background-color: $primary;
 }
 
+// QListWidget::item:selected:!active {
+//   background: $secondary;
+// }
+
 QListWidget::item[labelClass="dark"] {
     color: red;
 }
 
+QListWidget#tempAsset::item {
+    color: red;
+    background-color: yellow; 
+}
+
 QListWidget::item:disabled {
-	color: $grey-dark;
+	color: $grey;
 }
 
 // BUTTONS
 QPushButton * {
-  color: #ddd;
+  color: red;
 }
 
 QPushButton:hover {
-  color: white;
+  color: red;
+}
+
+QPushButton:disabled {
+  background-color:red;
 }
 
 // DIALOGS
@@ -131,22 +143,49 @@ QListView {
 
 
 // Radio Button
-QRadioButton {
-  color:  $grey-lighter;
+QRadioButton::indicator::checked
+{
+  width: 16px;
+  height: 16px;
+  color: white;
+  image: url(icons/radio_button_checked_white_18dp.png);
 }
 
-QRadioButton::indicator {
-  width:                  10px;
-  height:                 10px;
-  border-radius:          7px;
+QRadioButton::indicator::unchecked
+{
+  width: 16px;
+  height: 16px;
+  color: white;
+  image: url(icons/radio_button_unchecked_white_18dp.png);
 }
 
-QRadioButton::indicator:checked {
-    background-color: green;
-    border: 2px solid red;
+// CHECK BOX
+QCheckBox::indicator:checked {
+  width: 16px;
+  height: 16px;
+  image: url(icons/checkbox_white_checked_18dp.png);
 }
 
-QRadioButton::indicator:unchecked {
-    background-color:       black;
-    border:                 2px solid white;
+QCheckBox::indicator:unchecked {
+  width: 16px;
+  height: 16px;
+  image: url(icons/checkbox_white_unchecked_18dp.png);
+}
+
+// TOOLTIP
+QToolTip { 
+  background-color: $grey-dark; 
+  color: white; 
+}
+
+// CUSTOM
+QPushButton#export_button {
+  background-color: $grey-lighter;
+  color: $grey;
+  padding: 10px;
+  font-size: 12px;
+}
+
+QPushButton:disabled#export_button {
+  background-color: $grey-light;
 }
