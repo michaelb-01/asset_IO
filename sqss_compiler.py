@@ -1,4 +1,5 @@
 import re
+import os
 
 def compile(sqssFile, variablesFile):
     print('sqss_compiler')
@@ -8,9 +9,6 @@ def compile(sqssFile, variablesFile):
     with open(variablesFile, 'r') as variables, open(sqssFile, 'r') as sqss:
         output = sqss.read()
         lines = variables.readlines()
-
-        print('TBA :: INPUT')
-        print(output)
 
         for line in lines:
             # skip empty lines
@@ -28,7 +26,18 @@ def compile(sqssFile, variablesFile):
             # replace variable found in line
             output = output.replace(key,value)
 
-        print('TBA :: OUTPUT')
-        print(output)
+        #print('TBA :: OUTPUT')
+        #print(output)
+
+        # write file - in production we would use this
+        outfile = os.path.splitext(sqssFile)[0] + '.qss'
+
+        try:
+            with open(outfile, "w") as f:
+                f.write(output)
+            print('Successfully wrote qss stylesheet to: {0}'.format(outfile))
+        except IOError as e:
+            print("Couldn't open or write to file: {0}".format(e))
+
         return output
 

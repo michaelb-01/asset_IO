@@ -122,6 +122,7 @@ class radioButton(QtWidgets.QWidget):
         paint.drawEllipse(3, 3, width, width)
 
 class TBA_list(QtWidgets.QWidget):
+    rightClicked = QtCore.Signal(QtCore.QEvent)
 
     def __init__(self):
         super(TBA_list, self).__init__()
@@ -189,7 +190,7 @@ class TBA_list(QtWidgets.QWidget):
         if not self.footer:
             self.footer = QtWidgets.QLabel(objectName='footer')
             self.footerPrefix = QtWidgets.QLabel('Write: ')
-            
+
             self.footerLayout.insertWidget(0,self.footer,0)
             self.footerLayout.insertWidget(0,self.footerPrefix,0)
 
@@ -221,4 +222,12 @@ class TBA_list(QtWidgets.QWidget):
         self.tbaList.scrollToItem(self.tbaList.item(num-1))
         self.updateNumItems()
 
+    def contextMenuEvent(self, event):
+        print('contextMenuEvent')
+        print(event)
 
+        if not self.tbaList.selectedItems():
+            print('No item selected')
+            return
+
+        self.rightClicked.emit(self.mapToGlobal(event.pos()))

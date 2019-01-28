@@ -5,6 +5,7 @@ import re
 import json
 import subprocess
 import getpass
+import shutil
 
 sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
@@ -48,8 +49,7 @@ class TBAExportResultsDialog(QtWidgets.QDialog):
         ))
 
         self.exportResults = exportResults
-        print(self.exportResults)
-        print(len(self.exportResults))
+        self.platform = sys.platform
 
         self.setWindowTitle("Custom Dialog")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -84,16 +84,22 @@ class TBAExportResultsDialog(QtWidgets.QDialog):
             main_layout.addLayout(publish_layout)
 
     def create_connections(self):
-        self.export_btn.clicked.connect(self.exploreExportedFile)
-        self.publish_btn.clicked.connect(self.explorePublishedFile)
+        self.export_browse_btn.clicked.connect(lambda: self.exploreFile(0))
+        self.publish_browse_btn.clicked.connect(lambda: self.exploreFile(1))
 
-    def exploreExportedFile(self):
-        subprocess.Popen(["open", self.exportResults[0]])
-
-    def explorePublishedFile(self):
-        subprocess.Popen(["open", self.exportResults[1]])
+    def exploreFile(self, which):
+        if self.platform == "win32":
+            print('Explore file in windows explorer')
+            subprocess.Popen(r'explorer /select, ' + self.exportResults[which])
+        elif self.platform == "darwin":
+            print('Explore file in max finder')
+            subprocess.Popen(["open", self.exportResults[which]])
+        else:
+            print('OS is linux, ignoring..')
 
 class TBAAssetExporter(QtWidgets.QDialog):
+    PLATFORM = sys.platform
+
     TYPES = ['camera', 'model', 'anim', 'fx', 'rig', 'light', 'shaders']
     DARK_COLOUR = QtGui.QColor(80,85,95)
     PRIMARY = 'rgb(207,66,53)'
@@ -208,8 +214,16 @@ class TBAAssetExporter(QtWidgets.QDialog):
         self.rb_workRange = QtWidgets.QRadioButton("Time Slider")
         self.rb_startEnd = QtWidgets.QRadioButton("Start End")
 
-        self.range_start_le = QtWidgets.QLineEdit()
-        self.range_end_le = QtWidgets.QLineEdit()
+        self.range_start_le = QtWidgets.QLineEdit('1001')
+        self.range_start_le.setValidator(QtGui.QIntValidator()) # only allow integers
+        self.range_start_le.setDisabled(True)
+
+        self.range_end_le = QtWidgets.QLineEdit('1201')
+        self.range_end_le.setValidator(QtGui.QIntValidator())
+        self.range_end_le.setDisabled(True)
+
+        self.range_step_le = QtWidgets.QLineEdit('1.0')
+        self.range_step_le.setDisabled(True)
 
         # export
         self.publish_cb = QtWidgets.QCheckBox('Publish')
@@ -277,6 +291,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         frame_range_layout.addWidget(self.rb_startEnd)
         frame_range_layout.addWidget(self.range_start_le)
         frame_range_layout.addWidget(self.range_end_le)
+        frame_range_layout.addWidget(self.range_step_le)
 
         frame_range_rb_layout.addLayout(frame_range_layout)
 
@@ -297,12 +312,18 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
         # asset list
         self.assetList.tbaList.itemSelectionChanged.connect(self.onAssetSelected)
+        self.assetList.rightClicked.connect(self.assetRightClicked)
 
         self.typesList.tbaList.itemSelectionChanged.connect(self.onTypeSelected)
+        self.typesList.rightClicked.connect(self.assetRightClicked)
         self.typesCombo.currentIndexChanged.connect(self.onTypeComboSelected)
 
         self.versionList.tbaList.itemSelectionChanged.connect(self.onVersionSelected)
-        self.versionAutoVersion.stateChanged.connect(self.onAutoVersionChanged)
+        self.versionList.rightClicked.connect(self.assetRightClicked)
+        self.versionAutoVersion.toggled.connect(self.onAutoVersionChanged)
+
+
+        self.rb_startEnd.toggled.connect(self.onRangeToggled)
 
         self.export_btn.clicked.connect(self.export)
 
@@ -316,9 +337,45 @@ class TBAAssetExporter(QtWidgets.QDialog):
         self.exportDir = os.path.join(currentDir, self.exportDirName)
         self.publishDir = os.path.join(currentDir, '..', self.publishDirName)
 
+        print('Export directory is: {0}'.format(self.exportDir))
+        print('Publish directory is: {0}'.format(self.publishDir))
+
+    def getAssetPath(self):
+        path = os.path.join(self.exportDir, 'assets')
+
+        # if version item is selected just delete this version
+        if self.versionList.tbaList.hasFocus():
+            selVersion = self.versionList.tbaList.currentItem().text()
+            path = os.path.join(path, self.selAsset, self.selType, selVersion)
+        # if type item is selected delete the asset type
+        elif self.typesList.tbaList.hasFocus():
+            path = os.path.join(path, self.selAsset, self.selType)
+        elif self.assetList.tbaList.hasFocus():
+            path = os.path.join(path, self.selAsset)
+        else:
+            return False
+
+        return path
+
     # ----------------------------------------------------------------------
     # ASSET LIST LOGIC
     # ----------------------------------------------------------------------
+    def assetRightClicked(self, pos):
+        print('RECEIVED ASSET RIGHT CLICKED')
+
+        contextMenu = QtWidgets.QMenu(self)
+
+        deleteAct = contextMenu.addAction('Delete')
+        exploreAct = contextMenu.addAction('Explore')
+
+        action = contextMenu.exec_(pos)
+
+        if action == deleteAct:
+            self.deleteAsset()
+        elif action == exploreAct:
+            print('explore asset')
+            self.exploreFile(0)
+
     def updateTempAssetName(self,name):
         print('updateTempAssetName: {0}'.format(name))
         name = self.camelCase(name)
@@ -613,8 +670,10 @@ class TBAAssetExporter(QtWidgets.QDialog):
         # update versions header
         #self.versionList.updateNumItems()
 
-    def onAutoVersionChanged(self):
-        if self.versionAutoVersion.isChecked():
+    def onAutoVersionChanged(self, checked):
+        print('onAutoVersionChanged')
+
+        if checked:
             self.disableAllVersions()
             self.selVersion = None
             self.typesList.tbaList.setFocus()
@@ -670,6 +729,14 @@ class TBAAssetExporter(QtWidgets.QDialog):
         self.formatsCombo.addItems(formats)
 
     # ----------------------------------------------------------------------
+    # WORK RANGE
+    # ----------------------------------------------------------------------
+    def onRangeToggled(self, checked):
+        self.range_start_le.setDisabled(not checked)
+        self.range_end_le.setDisabled(not checked)
+        self.range_step_le.setDisabled(not checked)
+
+    # ----------------------------------------------------------------------
     # EXPORT
     # ----------------------------------------------------------------------
     def enable_export(self, state):
@@ -685,8 +752,8 @@ class TBAAssetExporter(QtWidgets.QDialog):
         key = event.key()
 
         if key == QtCore.Qt.Key_Right:
-            # if 'active' list is selType select last version
-            if self.selType:
+            # if typesList has focus
+            if self.typesList.tbaList.hasFocus():
                 # select last version
                 print('keyPressEvent, select version')
                 num = self.versionList.tbaList.count()
@@ -696,7 +763,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
                 self.versionList.tbaList.setCurrentItem(item)
                 self.selVersion = item.text()
                 self.versionList.tbaList.setFocus()
-            elif self.selAsset:
+            elif self.assetList.tbaList.hasFocus():
                 # select first selectable type
                 print('keyPressEvent, select type')
                 for i in range(self.typesList.tbaList.count()):
@@ -713,18 +780,54 @@ class TBAAssetExporter(QtWidgets.QDialog):
                         self.assetList.tbaList.setFocus()
                         return
         elif key == QtCore.Qt.Key_Left:
-            if self.selVersion:
+            if self.versionList.tbaList.hasFocus():
                 print('keyPressEvent, select type')
                 self.typesList.tbaList.setFocus()
                 self.selVersion = None
                 self.updateVersionList()
-            elif self.selType:
+            elif self.typesList.tbaList.hasFocus():
                 print('keyPressEvent, select asset')
                 self.assetList.tbaList.setFocus()
                 self.selType = None
                 # deselect all
                 self.typesList.tbaList.setCurrentRow(-1)
                 self.updateTypeList()
+        elif key == QtCore.Qt.Key_Escape:
+            self.close()
+
+    def deleteAsset(self):
+        print('deleteAsset')
+        path = self.getAssetPath()
+
+        res = QtWidgets.QMessageBox.question(self, "You are about to delete an asset on disk!", "Are you sure?",
+                                QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+
+        if res == QtWidgets.QMessageBox.Ok:
+            print('Deleting: {0}'.format(path))
+
+            try:
+                shutil.rmtree(path)
+            except OSError as e:
+                print ("Error: %s - %s." % (e.path, e.strerror))
+            else:
+                print('Successfully deleted: {0}'.format(path))
+                self.updateAssetList()
+
+    def exploreFile(self, which):
+        path = self.getAssetPath()
+
+        if not path:
+            print('Could not build asset path')
+            return
+
+        if self.PLATFORM == "win32":
+            print('Explore file in windows explorer')
+            subprocess.Popen(r'explorer /select, ' + path)
+        elif self.PLATFORM == "darwin":
+            print('Explore file in max finder')
+            subprocess.Popen(["open", path])
+        else:
+            print('OS is linux, ignoring..')
 
     def enableItem(self, item):
         item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
