@@ -1,7 +1,7 @@
 * {
 	//font-family: "Roboto", Times, serif;
 	//font-weight: light;
-  font-size: 11pt;
+  font-size: 12px;
   color:$grey-lighter;
 }
 
@@ -71,7 +71,7 @@ QListWidget::item[labelClass="dark"] {
 
 QListWidget#tempAsset::item {
     color: red;
-    background-color: yellow; 
+    background-color: yellow;
 }
 
 QListWidget::item:disabled {
@@ -89,6 +89,29 @@ QPushButton:hover {
 
 QPushButton:disabled {
   background-color:red;
+}
+
+// SCROLLBAR
+QScrollBar::up-arrow:vertical {
+  image:url(icons/arrow_up_grey.png);
+  width: 20px;
+  height: 20px;
+}
+
+// disable border for top arrow
+QScrollBar::sub-line:vertical {
+  background: none;
+}
+
+QScrollBar::down-arrow:vertical {
+  image:url(icons/arrow_down_grey.png);
+  width: 20px;
+  height: 20px;
+}
+
+// disable border for bottom arrow
+QScrollBar::add-line:vertical {
+  background: none;
 }
 
 // DIALOGS
@@ -122,7 +145,7 @@ QComboBox:drop-down {
 }
 
 QComboBox:down-arrow {
-  image: url('./images/arrow_drop_down_black_36.png');
+  image: url(icons/arrow_down_white.png);
   width: 24px;
   height: 24px;
 }
@@ -148,7 +171,7 @@ QRadioButton::indicator::checked
   width: 16px;
   height: 16px;
   color: white;
-  image: url(icons/radio_button_checked_white_18dp.png);
+  image: url(icons/radio_button_checked_white.png);
 }
 
 QRadioButton::indicator::unchecked
@@ -156,26 +179,26 @@ QRadioButton::indicator::unchecked
   width: 16px;
   height: 16px;
   color: white;
-  image: url(icons/radio_button_unchecked_white_18dp.png);
+  image: url(icons/radio_button_unchecked_white.png);
 }
 
 // CHECK BOX
 QCheckBox::indicator:checked {
   width: 16px;
   height: 16px;
-  image: url(icons/checkbox_white_checked_18dp.png);
+  image: url(icons/checkbox_checked_white.png);
 }
 
 QCheckBox::indicator:unchecked {
   width: 16px;
   height: 16px;
-  image: url(icons/checkbox_white_unchecked_18dp.png);
+  image: url(icons/checkbox_unchecked_white.png);
 }
 
 // TOOLTIP
-QToolTip { 
-  background-color: $grey-dark; 
-  color: white; 
+QToolTip {
+  background-color: $grey-dark;
+  color: white;
 }
 
 // CUSTOM

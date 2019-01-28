@@ -39,10 +39,12 @@ from PySide2 import QtCore, QtWidgets, QtGui
 class TBAExportResultsDialog(QtWidgets.QDialog):
     def __init__(self, exportResults, parent=None):
         super(TBAExportResultsDialog, self).__init__(parent)
-        
+
+        module_path = os.path.dirname(os.path.abspath(__file__))
+
         self.setStyleSheet(sqss_compiler.compile(
-            '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
-            '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+            os.path.join(module_path,'TBA_stylesheet.scss'),
+            os.path.join(module_path,'variables.scss'),
         ))
 
         self.exportResults = exportResults
@@ -58,15 +60,17 @@ class TBAExportResultsDialog(QtWidgets.QDialog):
 
     def create_widgets(self):
         self.export_label = QtWidgets.QLabel('Export Successfull')
-        self.export_btn = QtWidgets.QPushButton('Open')
+        self.export_browse_btn = QtWidgets.QPushButton('Open')
 
         self.publish_label = QtWidgets.QLabel('Publish Successfull')
-        self.publish_btn = QtWidgets.QPushButton('Open')
+        self.publish_browse_btn = QtWidgets.QPushButton('Open')
+
+        self.ok_btn = QtWidgets.QPushButton('Ok')
 
     def create_layout(self):
         export_layout = QtWidgets.QHBoxLayout()
         export_layout.addWidget(self.export_label)
-        export_layout.addWidget(self.export_btn)
+        export_layout.addWidget(self.export_browse_btn)
 
         main_layout = QtWidgets.QVBoxLayout(self)
 
@@ -75,7 +79,7 @@ class TBAExportResultsDialog(QtWidgets.QDialog):
         if len(self.exportResults) > 1:
             publish_layout = QtWidgets.QHBoxLayout()
             publish_layout.addWidget(self.publish_label)
-            publish_layout.addWidget(self.publish_btn)
+            publish_layout.addWidget(self.publish_browse_btn)
 
             main_layout.addLayout(publish_layout)
 
@@ -119,13 +123,16 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
     dlg_instance = None
 
-    @classmethod 
+    @classmethod
     def show_dialog(cls):
         if not cls.dlg_instance:
             cls.dlg_instance = TBAAssetExporter(maya_main_window())
+
+            module_path = os.path.dirname(os.path.abspath(__file__))
+
             cls.dlg_instance.setStyleSheet(sqss_compiler.compile(
-                '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
-                '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+                os.path.join(module_path,'TBA_stylesheet.scss'),
+                os.path.join(module_path,'variables.scss'),
             ))
 
         if cls.dlg_instance.isHidden():
@@ -174,7 +181,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
         self.versionListLabel = QtWidgets.QLabel('Versions')
         self.versionList = TBA_UI.TBA_list()
-        
+
         self.versionAutoVersion = QtWidgets.QCheckBox()
         self.versionAutoVersion.setChecked(True)
         self.versionAutoVersion.setToolTip('Auto-version')
@@ -202,7 +209,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         self.rb_startEnd = QtWidgets.QRadioButton("Start End")
 
         self.range_start_le = QtWidgets.QLineEdit()
-        self.range_end_le = QtWidgets.QLineEdit()        
+        self.range_end_le = QtWidgets.QLineEdit()
 
         # export
         self.publish_cb = QtWidgets.QCheckBox('Publish')
@@ -306,29 +313,34 @@ class TBAAssetExporter(QtWidgets.QDialog):
         else:
             currentDir = os.path.dirname(os.path.realpath(__file__))
 
-        #publishDir = os.path.join(currentDir, '_published3d')
         self.exportDir = os.path.join(currentDir, self.exportDirName)
-        self.publishDir = os.path.join(currentDir, '..', self.publishDirName)     
-
+        self.publishDir = os.path.join(currentDir, '..', self.publishDirName)
 
     # ----------------------------------------------------------------------
     # ASSET LIST LOGIC
     # ----------------------------------------------------------------------
     def updateTempAssetName(self,name):
         print('updateTempAssetName: {0}'.format(name))
+        name = self.camelCase(name)
+        print('updateTempAssetName, camelCase name: {0}'.format(name))
 
-        if len(name) == 0:
+        if not name:
             print('updateTempAssetName: removeTempAsset')
             self.removeTempAsset()
+            self.assetList.tbaList.setFocus()
             return
-        else:
+        elif name.strip():
             self.selAsset = name
             items = self.assetList.tbaList.findItems(name, QtCore.Qt.MatchExactly)
 
+            # remove temp asset if an asset on disk exists with the same name
             if items:
-                print('updateTempAssetName, REMOVE ASSET NAME')
-                self.removeTempAsset()
-                self.assetList.tbaList.setCurrentItem(items[0])
+                # only if the asset in assetList is not the same as assetName. This can happen since we are stripping whitespace
+                data = items[0].data(QtCore.Qt.UserRole)
+                if data != 'temp':
+                    print('updateTempAssetName, REMOVE ASSET NAME')
+                    self.removeTempAsset()
+                    self.assetList.tbaList.setCurrentItem(items[0])
             else:
                 self.addTempAsset(name)
 
@@ -350,10 +362,10 @@ class TBAAssetExporter(QtWidgets.QDialog):
         # add list item with temp user data
         item = QtWidgets.QListWidgetItem(e)
         item.setData(QtCore.Qt.UserRole, 'temp')
-        
+
         # change background-color to illustrate that this has not yet been created on disk
         self.assetList.tbaList.setStyleSheet('QListWidget::item:selected { background-color: ' + str(self.SECONDARY) + ' }')
-            
+
         self.assetList.tbaList.addItem(item)
         self.assetList.tbaList.setCurrentRow(idx)
 
@@ -374,7 +386,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
                 item = self.assetList.tbaList.takeItem(i)
                 item = None
 
-        # reset selected color to original 
+        # reset selected color to original
         self.assetList.tbaList.setStyleSheet('QListWidget::item:selected { background-color: ' + str(self.PRIMARY) + ' }')
 
     def onAssetSelected(self):
@@ -386,8 +398,8 @@ class TBAAssetExporter(QtWidgets.QDialog):
             self.selAsset = None
             self.enable_export(False)
         else:
-            print('onAssetSelected: set selAsset to {0}'.format(self.selAsset))
             self.selAsset = item.text()
+            print('onAssetSelected: set selAsset to {0}'.format(self.selAsset))
 
         # remove temp item (as long as its not the temp item itself)
         if item:
@@ -405,7 +417,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         if selAsset:
             print('set selAsset to its text')
             selAsset = selAsset.text()
-        
+
         print(selAsset)
 
         # clear all items, will repopulate later in this function
@@ -415,16 +427,19 @@ class TBAAssetExporter(QtWidgets.QDialog):
         exportedAssetsDir = os.path.join(self.exportDir, 'assets')
         publishedAssetsDir = os.path.join(self.publishDir, 'assets')
 
-        if not os.path.exists(exportedAssetsDir):
+        exportedAssets = []
+        publishedAssets = []
+
+        # check directories exist then get assets
+        if os.path.exists(exportedAssetsDir):
+            exportedAssets = sorted(os.listdir(exportedAssetsDir))
+        else:
             print('Assets exports directory does not exist: {0}'.format(exportedAssetsDir))
-            return
 
-        if not os.path.exists(publishedAssetsDir):
+        if os.path.exists(publishedAssetsDir):
+            publishedAssets = sorted(os.listdir(publishedAssetsDir))
+        else:
             print('Assets _published3d directory does not exist: {0}'.format(publishedAssetsDir))
-            return
-
-        exportedAssets = sorted(os.listdir(exportedAssetsDir))
-        publishedAssetsDir = sorted(os.listdir(publishedAssetsDir))
 
         # add assets to asset list
         for asset in exportedAssets:
@@ -439,7 +454,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
             self.assetList.tbaList.addItem(item)
 
-            if asset not in publishedAssetsDir:
+            if asset not in publishedAssets:
                 self.italicItem(item)
 
             # reselect item if it was selected
@@ -510,11 +525,11 @@ class TBAAssetExporter(QtWidgets.QDialog):
 
         item = self.typesList.tbaList.currentItem()
         print('onTypeSelected, type:')
-        print item
+        print(item)
 
         if item:
-            self.selType = item.text() 
-        
+            self.selType = item.text()
+
         self.updateVersionList()
         self.updateFormatList()
 
@@ -524,7 +539,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
              self.typesCombo.setCurrentIndex(index)
 
     def onTypeComboSelected(self, idx):
-        print 'type combo selected'
+        print('onTypeComboSelected')
 
         self.typesList.tbaList.item(idx).setSelected(True)
 
@@ -552,7 +567,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         self.versionList.footer.setText(item.text())
 
     def updateVersionList(self):
-        print 'updateVersionList'
+        print('updateVersionList')
 
         # clear all items, will repopulate later in this function
         self.versionList.tbaList.clear()
@@ -573,7 +588,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
             print('Version does not exist')
             self.updateWriteVersion()
             return
-    
+
         # list version folders inside exportedVersionsDir
         exportedVersions = sorted(os.listdir(exportedVersionsDir))
         publishedVersions = []
@@ -623,7 +638,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
                     num = int(lastVersion[1:]) + 1
                     writeVersion = 'v' + str(num).zfill(3)
                 except:
-                    print 'couldnt extract version number'
+                    print('couldnt extract version number')
             else:
                 writeVersion = 'v001'
         else:
@@ -647,11 +662,11 @@ class TBAAssetExporter(QtWidgets.QDialog):
     # FORMATS
     # ----------------------------------------------------------------------
     def updateFormatList(self):
-        print 'updateFormatList'
+        print('updateFormatList')
         self.formatsCombo.clear()
 
         formats = self.FORMATS[self.selType]
- 
+
         self.formatsCombo.addItems(formats)
 
     # ----------------------------------------------------------------------
@@ -659,7 +674,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
     # ----------------------------------------------------------------------
     def enable_export(self, state):
         self.export_btn.setEnabled(state)
-    
+
 
     # ----------------------------------------------------------------------
     # helper functions
@@ -728,13 +743,19 @@ class TBAAssetExporter(QtWidgets.QDialog):
         font.setItalic(True)
         item.setFont(font)
 
+    def camelCase(self, st):
+        if not st.strip():
+            return st
+
+        output = ''.join(x for x in st.title() if x.isalnum())
+        return output[0].lower() + output[1:]
 
     # ----------------------------------------------------------------------
     # EXPORT FUNCTIONS
     # ----------------------------------------------------------------------
-    
+
     def export(self):
-        print 'EXPORT'
+        print('EXPORT')
         exportVersion = self.versionList.footer.text()
 
         if not self.selAsset:
@@ -754,18 +775,52 @@ class TBAAssetExporter(QtWidgets.QDialog):
         print('SEL TYPE: {0}'.format(self.selType))
         print('EXPORT VERSION: {0}'.format(exportVersion))
 
-        exportDir = os.path.join(self.exportDir, 'assets', self.selAsset, self.selType, exportVersion)
+        assetExportDir = os.path.join(self.exportDir, 'assets', self.selAsset, self.selType, exportVersion)
+        assetPublishDir = os.path.join(self.publishDir, 'assets', self.selAsset, self.selType, exportVersion)
 
+        msg = ''
+        msg2 = 'Create it?'
+        missingDirs = []
+
+        if not os.path.exists(self.exportDir) and not not os.path.exists(self.publishDir):
+            msg = "Neither 'exports' or '_published3d' directory exists"
+            msg2 = 'Create both?'
+            missingDirs = [self.exportDir, self.publishDir]
+        elif not os.path.exists(self.exportDir):
+            msg = "'exports' folder does not exist"
+            missingDirs = [self.exportDir]
+        elif not os.path.exists(self.publishDir):
+            msg = "'_published3d' folder does not exist"
+            missingDirs = [self.publishDir]
+
+        # if either directory doesn't exist, ask if user wants to create it
+        if len(missingDirs) > 0:
+            msgBox = QtWidgets.QMessageBox(self)
+            msgBox.setText( msg )
+            msgBox.setInformativeText( msg2 )
+            msgBox.setStandardButtons( QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel )
+            msgBox.setDefaultButton( QtWidgets.QMessageBox.Ok )
+
+            res = msgBox.exec_()
+
+            if res == QtWidgets.QMessageBox.Ok:
+                for missingDir in missingDirs:
+                    print('Creating directories: {0}'.format(missingDir))
+                    os.makedirs(missingDir)
+            else:
+                print('Not creating directories. Exiting')
+                return
+
+        # EXPORT
         exportResults = []
-        exportResults.append(exportDir)
+        exportResults.append(assetExportDir)
 
-        self.exportAssetJsonFile(exportDir, exportVersion)
+        self.exportAssetJsonFile(assetExportDir, exportVersion)
 
         if self.publish_cb.isChecked():
-            exportDir = os.path.join(self.publishDir, 'assets', self.selAsset, self.selType, exportVersion)
-            exportResults.append(exportDir)
+            exportResults.append(assetPublishDir)
 
-            self.exportAssetJsonFile(exportDir, exportVersion)
+            self.exportAssetJsonFile(assetPublishDir, exportVersion)
 
         print('\n\n\nEXPORT RESULTS')
         print(exportResults)
@@ -795,7 +850,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         jsonPath = os.path.join(exportDir, filepath)
 
         if dryRun:
-            print 'Asset json export path is ' + jsonPath
+            print('Asset json export path is: {0}'.format(jsonPath))
             return
 
         # get notes
@@ -823,8 +878,7 @@ class TBAAssetExporter(QtWidgets.QDialog):
         with open(jsonPath, 'w') as outfile:
             json.dump(data, outfile, indent=4, sort_keys=True)
 
-        print 'Created a hidden json file here:'
-        print outfile
+        print('Created a hidden json file here: {0}'.format(outfile))
 
         # make file hidden
         # subprocess.check_call(["attrib","+H",jsonPath])
@@ -861,12 +915,13 @@ def run_maya():
 def run_standalone():
     print('TBA :: Run Standalone')
     app = QtWidgets.QApplication(sys.argv)
+
+    module_path = os.path.dirname(os.path.abspath(__file__))
+
     app.setStyleSheet(sqss_compiler.compile(
-        '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/TBA_stylesheet.scss', 
-        '/Users/michaelbattcock/Documents/VFX/TBA/dev/asset_IO/variables.scss'
+        os.path.join(module_path,'TBA_stylesheet.scss'),
+        os.path.join(module_path,'variables.scss'),
     ))
-    # app.setStyleSheet('TBA_stylesheet.scss')
-    #app.setStyleSheet("QLineEdit { background-color: yellow }")
 
     tba_exporter = TBAAssetExporter()
 
