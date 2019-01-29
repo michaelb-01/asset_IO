@@ -2,10 +2,7 @@ import re
 import os
 
 def compile(sqssFile, variablesFile):
-    print('sqss_compiler')
-    print(sqssFile)
-    print(variablesFile)
-
+    
     with open(variablesFile, 'r') as variables, open(sqssFile, 'r') as sqss:
         output = sqss.read()
         lines = variables.readlines()

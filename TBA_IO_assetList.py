@@ -21,7 +21,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         'light':['mb']
     }
 
-    work_root = None
+    workspace = None
 
     stage = 'build'
     entity = ''
@@ -58,6 +58,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         self.right_icon2 = QtGui.QPixmap('icons/arrow_right_white.png')
         self.right_btn2 = QtWidgets.QPushButton('')
+        self.right_btn2.setDisabled(True)
         self.right_btn2.setIcon(self.right_icon2)
 
         self.stage_btn = QtWidgets.QPushButton('build')
@@ -139,30 +140,68 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         #self.types_list.itemSelectionChanged.connect(self.on_typ)
         self.types_list.rightClicked.connect(self.asset_right_clicked)
 
-    def update_exports_dirs(self, export_dir=None, publish_dir=None):
-        print('TBA :: update_exports_dirs')
+    def set_workspace(self, workspace=None):
+        print('TBA :: set_workspace to: {0}'.format(workspace))
 
-        print('Export directory: {0}'.format(export_dir))
-        print('Publish directory: {0}'.format(publish_dir))
+        if not workspace:
+            print('Workspace not found. Exiting')
+            return
+            
+        self.workspace = workspace
+
+        export_dir = os.path.join(workspace, 'exports', 'assets')
+        publish_dir = os.path.join(workspace, '..', '_published3d', 'assets')
+
+        missing_dirs = []
+
+        msg = ''
+
+        if not os.path.exists(export_dir):
+            missing_dirs.append(export_dir)
+        if not os.path.exists(publish_dir):
+            missing_dirs.append(publish_dir)
+
+        if missing_dirs:
+            msg = 'Export folders are missing. Create them?\n\n' + '\n\n'.join(missing_dirs)
+
+            res = QtWidgets.QMessageBox.question(self, "Export folders are missing", msg,
+                                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+
+            if res == QtWidgets.QMessageBox.Ok:
+                self.close()
+                return
+
+            for directory in missing_dirs:
+                try:
+                    os.makedirs(directory)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
 
         self.export_dir = export_dir
         self.publish_dir = publish_dir
 
-        # update asset list
         self.update_asset_list()
 
-    def set_root(self, root):
-        print('Setting work root to: {0}'.format(root))
-        self.work_root = root
+        splits = self.workspace.split('/vfx/')
 
-        self.get_work_areas()
+        if len(splits) < 2:
+            print('TBA :: could not find vfx folder')
+            return
+
+        stage = splits[1].split('/')[0]
+
+        self.setStage(stage)
+
+        # get entity
+        entity = splits[1].split('/')[1]
+        self.entity_btn.setText(entity)
 
     def setStage(self, stage):
         print('select stage: {0}'.format(stage))
 
-
-
         if stage != self.stage:
+            self.stage = stage
             self.stage_btn.setText(stage)
 
     def setEntity(self, entity):
@@ -176,14 +215,14 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     def update_entity_menu(self):
         print('update entity menu')
 
-        if not self.work_root:
-            print('Couldnt find work root')
+        if not self.workspace:
+            print('Couldnt find workspace')
             return
 
         self.entity_menu = QtWidgets.QMenu(self)
         self.entity_menu.setCursor(QtCore.Qt.PointingHandCursor)
 
-        entities_dir = os.path.join(self.work_root, self.stage_btn.text())
+        entities_dir = os.path.join(self.workspace, '..', '..', '..', self.stage_btn.text())
 
         entities = []
 
@@ -192,30 +231,12 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         # populate menu
         for entity in entities:
-            self.entity_menu.addAction(entity, lambda entity=entity: self.setEntity(entity))
+            # ignore hidden files
+            if not entity.startswith('.'):
+                self.entity_menu.addAction(entity, lambda entity=entity: self.setEntity(entity))
 
         self.entity_btn.setMenu(self.entity_menu)
         self.entity_btn.showMenu()
-
-    def get_work_areas(self):
-        print('get work area')
-        if not self.work_root:
-            print('Couldnt find work root')
-            return
-
-        build_dir = os.path.join(self.work_root, 'build')
-        shots_dir = os.path.join(self.work_root, 'shots')
-
-        build_entities = []
-
-        if os.path.exists(build_dir):
-            build_entities = os.listdir(build_dir)
-
-        if os.path.exists(shots_dir):
-            shots = os.listdir(shots_dir)
-
-        print('build entities: {0}'.format(build_entities))
-        print('shots: {0}'.format(shots))
 
     def update_asset_list(self):
         print('TBA :: update_asset_list')
@@ -285,7 +306,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         # update type list
         self.updateTypeList()
-        self.select_enabled_type()
+        self.clearList(self.types_list)
+        #self.select_enabled_type()
 
     def updateTypeList(self):
         print('TBA :: updateTypeList')
@@ -350,6 +372,11 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         elif action == exploreAct:
             print('explore asset')
             self.exploreFile(0)
+
+    def clearList(self, listwidget):
+        for i in range(listwidget.count()):
+            item = listwidget.item(i)
+            listwidget.setItemSelected(item, False)
 
     def select_enabled_type(self):
         print('TBA :: select_enabled_type')
@@ -428,13 +455,16 @@ if __name__ == "__main__":
     tba_io_asset_list = TBA_IO_asset_list()
 
     # this would be called from the parent module
+    workspace = os.path.join(module_path, 'vfx', 'shots', 'sh0001', 'maya')
     export_dir = os.path.join(module_path, 'exports', 'assets')
     publish_dir = os.path.join(module_path, '..', '_published3d', 'assets')
 
-    tba_io_asset_list.update_exports_dirs(export_dir, publish_dir)
+    # workspace
+    tba_io_asset_list.set_workspace(workspace)
+    #tba_io_asset_list.update_exports_dirs(export_dir, publish_dir)
 
     # this would be the vfx folder of the job
-    tba_io_asset_list.set_root(module_path)
+    #tba_io_asset_list.set_root(module_path)
 
     tba_io_asset_list.show()  # Show the UI
     sys.exit(app.exec_())
