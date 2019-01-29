@@ -121,6 +121,71 @@ class radioButton(QtWidgets.QWidget):
 
         paint.drawEllipse(3, 3, width, width)
 
+class TBA_list_draggable(QtWidgets.QListWidget):
+    rightClicked = QtCore.Signal(QtCore.QEvent)
+    selItem = None
+
+    def __init__(self):
+        super(TBA_list_draggable, self).__init__()
+
+        # for drag and drop
+        self.selItem = None
+
+        self.itemPressed.connect(self.item_click)
+
+    def item_click(self, item):
+        self.selItem = item
+
+    def contextMenuEvent(self, event):
+        if not self.selectedItems():
+            print('No item selected')
+            return
+
+        self.rightClicked.emit(self.mapToGlobal(event.pos()))
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            super(TBA_list_draggable, self).dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(QtCore.Qt.CopyAction)
+            event.accept()
+        else:
+            super(TBA_list_draggable, self).dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        print('TBA :: dropEvent')
+
+        droppedItem = event.source().selItem
+
+        if droppedItem:
+            print('Dropped items text: {0}'.format(droppedItem.text()))
+            if self.findItems(droppedItem.text(), QtCore.Qt.MatchExactly):
+                print('Ignoring duplicate')
+                event.ignore()
+                return
+
+        if event.mimeData().hasUrls():
+            event.setDropAction(QtCore.Qt.CopyAction)
+            event.accept()
+            links = []
+            for url in event.mimeData().urls():
+                links.append(str(url.toLocalFile()))
+            self.emit(QtCore.SIGNAL("dropped"), links)
+        else:
+            event.setDropAction(QtCore.Qt.MoveAction)
+            super(TBA_list_draggable, self).dropEvent(event)
+
+    def select_first_enabled(self):
+        for i in range(self.count()):
+            if self.item(i).flags() & QtCore.Qt.ItemIsSelectable:
+                self.setCurrentRow(i)
+                self.setFocus()
+
+
 class TBA_list(QtWidgets.QWidget):
     rightClicked = QtCore.Signal(QtCore.QEvent)
 
@@ -143,7 +208,9 @@ class TBA_list(QtWidgets.QWidget):
 
     def create_widgets(self):
         # create list widget
-        self.tbaList = QtWidgets.QListWidget(self)
+        self.tbaList = QtWidgets.QListWidget()
+        #self.tbaList.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
+        self.tbaList.setDragDropMode(self.tbaList.InternalMove)
 
     def create_layouts(self):
         main_layout = QtWidgets.QVBoxLayout(self)
@@ -200,9 +267,6 @@ class TBA_list(QtWidgets.QWidget):
         self.createButton = iconButton()
 
         self.headerLayout.addWidget(self.createButton)
-
-    def onItemChanged(self, item):
-        self.updateNumItems()
 
     def updateNumItems(self):
         # add number of selectable items in brackets to the header

@@ -1,30 +1,27 @@
-import sys
 from PySide2 import QtWidgets, QtCore
+import sys
 
-class Test(QtWidgets.QDialog):
-    def __init__(self):
-        super(Test, self).__init__()
 
-        test = QtWidgets.QLabel('Test')
+class Main(QtWidgets.QMainWindow):
+    def __init__(self, parent=None):
+        super(Main, self).__init__(parent)
+        pushbutton = QtWidgets.QPushButton('Popup Button')
+        menu = QtWidgets.QMenu()
+        menu.addAction('This is Action 1', self.Action1)
+        menu.addAction('This is Action 2', self.Action2)
+        pushbutton.setMenu(menu)
+        self.setCentralWidget(pushbutton)
 
-        msgBox = QtWidgets.QMessageBox(self)
-        msgBox.setText("Could not find folder")
-        msgBox.setInformativeText("Create it?")
-        msgBox.setStandardButtons( QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel )
-        msgBox.setDefaultButton( QtWidgets.QMessageBox.Ok )
+    def Action1(self):
+        print('You selected Action 1')
 
-        main_layout = QtWidgets.QVBoxLayout(self)
-        main_layout.addWidget(test)
-        main_layout.addWidget(msgBox)
+    def Action2(self):
+        print('You selected Action 2')
 
-        res = msgBox.exec_();
 
-        print(res)
+if __name__ == '__main__':
 
-if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-
-    test = Test()
-
-    test.show()  # Show the UI
-    sys.exit(app.exec_())
+    main = Main()
+    main.show()
+    app.exec_()
