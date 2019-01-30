@@ -191,7 +191,6 @@ QMenu::item:selected {
 
 // FRAME
 
-
 // Radio Button
 QRadioButton::indicator::checked
 {
@@ -219,6 +218,14 @@ QCheckBox::indicator:checked {
 QCheckBox::indicator:unchecked {
   width: 16px;
   height: 16px;
+  image: url(icons/checkbox_unchecked_white.png);
+}
+
+QListView::indicator:checked {
+  image: url(icons/checkbox_checked_white.png);
+}
+
+QListView::indicator:unchecked {
   image: url(icons/checkbox_unchecked_white.png);
 }
 
