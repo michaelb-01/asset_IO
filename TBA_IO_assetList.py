@@ -21,10 +21,16 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         'light':['mb']
     }
 
+    # job root
+    jobroot = None
+
+    # maya/nuke/houdini project folder
     workspace = None
 
+    software = None
+
     stage = 'build'
-    entity = ''
+    entity = None
 
     # export and publish dirs
     export_dir = None
@@ -36,7 +42,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         super(TBA_IO_asset_list, self).__init__(parent)
 
         # unique object name for maya
-        self.setObjectName('MyLabel')
+        self.setObjectName('TBA_IO_asset_list')
 
         self.create_widgets()
         self.create_layouts()
@@ -67,8 +73,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         self.stage_menu = QtWidgets.QMenu(self)
         self.stage_menu.setCursor(QtCore.Qt.PointingHandCursor)
-        self.stage_menu.addAction('build', lambda: self.setStage('build'))
-        self.stage_menu.addAction('shots', lambda: self.setStage('shots'))
+        self.stage_menu.addAction('build', lambda: self.set_stage('build'))
+        self.stage_menu.addAction('shots', lambda: self.set_stage('shots'))
 
         self.stage_btn.setMenu(self.stage_menu)
 
@@ -141,6 +147,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.types_list.rightClicked.connect(self.asset_right_clicked)
 
     def set_workspace(self, workspace=None):
+        # workspace is set relative to current scene
         print('TBA :: set_workspace to: {0}'.format(workspace))
 
         if not workspace:
@@ -148,6 +155,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             return
             
         self.workspace = workspace
+
+        # software should be last folder
+        self.software = workspace.split('/')[-1]
 
         export_dir = os.path.join(workspace, 'exports', 'assets')
         publish_dir = os.path.join(workspace, '..', '_published3d', 'assets')
@@ -167,8 +177,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             res = QtWidgets.QMessageBox.question(self, "Export folders are missing", msg,
                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 
-            if res == QtWidgets.QMessageBox.Ok:
-                self.close()
+            if res == QtWidgets.QMessageBox.Cancel:
                 return
 
             for directory in missing_dirs:
@@ -183,37 +192,79 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         self.update_asset_list()
 
+        self.find_stage_and_entity()
+
+    def change_workspace(self):
+        #if not self.stage or not self.entity:
+        #    return
+
+        print('Old workspace: {0}'.format(self.workspace))
+        try:
+            workspace = os.path.join(self.jobroot, 'vfx', self.stage, self.entity, self.software)
+            self.set_workspace(workspace)
+        except:
+            print('Missing some info')
+
+        print('New workspace: {0}'.format(self.workspace))
+
+    def find_stage_and_entity(self):
         splits = self.workspace.split('/vfx/')
 
         if len(splits) < 2:
             print('TBA :: could not find vfx folder')
             return
 
-        stage = splits[1].split('/')[0]
+        self.jobroot = splits[0]
 
-        self.setStage(stage)
+        stage = splits[1].split('/')[0]
+        self.set_stage(stage)
 
         # get entity
         entity = splits[1].split('/')[1]
-        self.entity_btn.setText(entity)
+        self.set_entity(entity)
 
-    def setStage(self, stage):
-        print('select stage: {0}'.format(stage))
+    def set_stage(self, stage):
+        print('TBA :: set_stage: {0}'.format(stage))
 
         if stage != self.stage:
             self.stage = stage
             self.stage_btn.setText(stage)
 
-    def setEntity(self, entity):
-        print('select entity: {0}'.format(entity))
+            self.find_first_entity()
 
-        self.entity_btn.setText(entity)
+            #self.change_workspace()
 
-        # remove menu
-        self.entity_menu = None
+    def find_first_entity(self):
+        print('TBA :: find_first_entity')
+        try:
+            entity_dir = os.path.join(self.jobroot, 'vfx', self.stage)
+
+            if os.path.exists(entity_dir):
+                dirs = os.listdir(entity_dir)
+
+                for entity in dirs:
+                    print('check entity: {0}'.format(entity))
+                    if not entity.startswith('.'):
+                        self.set_entity(entity)
+                        return
+        except:
+            print('Missing some info')
+
+    def set_entity(self, entity):
+        print('set_entity {0}'.format(entity))
+
+        if entity != self.entity:
+            self.entity = entity
+            self.entity_btn.setText(entity)
+
+            # remove menu
+            self.entity_menu = None
+
+            self.change_workspace()
+            self.update_asset_list()
 
     def update_entity_menu(self):
-        print('update entity menu')
+        print('TBA :: update_entity_menu')
 
         if not self.workspace:
             print('Couldnt find workspace')
@@ -233,7 +284,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         for entity in entities:
             # ignore hidden files
             if not entity.startswith('.'):
-                self.entity_menu.addAction(entity, lambda entity=entity: self.setEntity(entity))
+                self.entity_menu.addAction(entity, lambda entity=entity: self.set_entity(entity))
 
         self.entity_btn.setMenu(self.entity_menu)
         self.entity_btn.showMenu()
