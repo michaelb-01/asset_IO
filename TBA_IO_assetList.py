@@ -11,6 +11,8 @@ import TBA_UI
 class TBA_IO_asset_list(QtWidgets.QDialog):
     importer = False
 
+    STAGES = ['build','shots','previs','rnd']
+
     # tasks and their associated formats
     TASKS = {
         'camera':['abc','fbx','mb'],
@@ -22,19 +24,20 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     }
 
     # job root
-    jobroot = None
+    jobroot = ''
 
     # maya/nuke/houdini project folder
-    workspace = None
+    workspace = ''
 
-    software = None
+    software = ''
 
-    stage = 'build'
-    entity = None
+    stage = ''
+    entity = ''
+    entities = None # available entities for the entity combobox
 
     # export and publish dirs
-    export_dir = None
-    publish_dir = None
+    export_dir = ''
+    publish_dir = ''
 
     DARK_COLOUR = QtGui.QColor(80,85,95)
 
@@ -67,19 +70,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.right_btn2.setDisabled(True)
         self.right_btn2.setIcon(self.right_icon2)
 
-        self.stage_btn = QtWidgets.QPushButton('build')
-        self.stage_btn.setFixedWidth(50)
-        self.stage_btn.setCursor(QtCore.Qt.PointingHandCursor)
+        self.stage_combo = QtWidgets.QComboBox()
 
-        self.stage_menu = QtWidgets.QMenu(self)
-        self.stage_menu.setCursor(QtCore.Qt.PointingHandCursor)
-        self.stage_menu.addAction('build', lambda: self.set_stage('build'))
-        self.stage_menu.addAction('shots', lambda: self.set_stage('shots'))
-
-        self.stage_btn.setMenu(self.stage_menu)
-
-        self.entity_btn = QtWidgets.QPushButton('')
-        self.entity_btn.setCursor(QtCore.Qt.PointingHandCursor)
+        self.entity_combo = QtWidgets.QComboBox()
 
         self.refresh_btn = QtWidgets.QPushButton('')
         self.refresh_btn.setCursor(QtCore.Qt.PointingHandCursor)
@@ -106,9 +99,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         header_layout.addWidget(self.header_label)
         header_layout.addWidget(self.home_btn)
         header_layout.addWidget(self.right_btn)
-        header_layout.addWidget(self.stage_btn)
+        header_layout.addWidget(self.stage_combo)
         header_layout.addWidget(self.right_btn2)
-        header_layout.addWidget(self.entity_btn)
+        header_layout.addWidget(self.entity_combo)
         header_layout.addStretch()
         header_layout.addWidget(self.refresh_btn)
 
@@ -133,7 +126,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         main_layout.addLayout(lists_layout)
 
     def create_connections(self):
-        self.refresh_btn.clicked.connect(self.update_asset_list)
+        self.refresh_btn.clicked.connect(self.on_refresh)
 
         #self.work_area.clicked.connect(self.get_work_area)
         #self.stage_btn.clicked.connect(self.on_stage_clicked)
@@ -141,26 +134,72 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.asset_list.itemSelectionChanged.connect(self.on_asset_selected)
         self.asset_list.rightClicked.connect(self.asset_right_clicked)
 
-        self.entity_btn.clicked.connect(self.update_entity_menu)
+        self.stage_combo.activated.connect(self.on_stage_updated)
+        self.entity_combo.activated.connect(self.on_entity_updated)
 
         #self.types_list.itemSelectionChanged.connect(self.on_typ)
         self.types_list.rightClicked.connect(self.asset_right_clicked)
 
     def set_workspace(self, workspace=None):
         # workspace is set relative to current scene
-        print('TBA :: set_workspace to: {0}'.format(workspace))
+        print('TBA :: set_workspace')
 
         if not workspace:
             print('Workspace not found. Exiting')
             return
-            
+
         self.workspace = workspace
 
-        # software should be last folder
-        self.software = workspace.split('/')[-1]
+        print('TBA :: workspace is: {0}'.format(self.workspace))
 
-        export_dir = os.path.join(workspace, 'exports', 'assets')
-        publish_dir = os.path.join(workspace, '..', '_published3d', 'assets')
+        # split path directories into list
+        parts = self.splitall(self.workspace)
+
+        # work up from workspace to find stage and entity
+        # we could also work from the vfx folder down since this is common to all jobs
+        # but then this tool wont work in a session of maya that is not part of the tba pipeline
+
+        if len(parts) < 3:
+            print('TBA :: workspace is not part of the TBA pipeline')
+        else:
+            self.software = parts[-1]
+            self.entity = parts[-2]
+            self.stage = parts[-3]
+            # the job root is up to 'stage'
+            self.jobroot = os.path.join(*parts[:-3])
+
+            print('TBA :: stage is: {0}'.format(self.stage))
+            print('TBA :: entity is: {0}'.format(self.entity))
+            print('TBA :: software is: {0}'.format(self.software))
+            print('TBA :: jobroot is: {0}'.format(self.jobroot))
+
+        self.get_export_dirs()
+
+        # initilaize stage and entity combo
+        # self.stage_combo.clear()
+        # self.stage_combo.addItem(self.stage)
+
+        # self.entity_combo.clear()
+        # self.entity_combo.addItem(self.entity)
+
+        self.update_breadcrumbs()
+
+    def update_workspace(self):
+        print('TBA :: update_workspace')
+        self.workspace = os.path.join(self.jobroot, self.stage, self.entity, self.software)
+        self.get_export_dirs()
+
+    def get_export_dirs(self):
+        print('TBA :: get_export_dirs')
+
+        if not self.workspace:
+            print('No workspace specified')
+            return
+
+        print('TBA :: get_export_dirs, workspace is: {0}'.format(self.workspace))
+
+        export_dir = os.path.join(self.workspace, 'exports', 'assets')
+        publish_dir = os.path.join(self.workspace, '..', '_published3d', 'assets')
 
         missing_dirs = []
 
@@ -187,107 +226,113 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
                     if e.errno != errno.EEXIST:
                         raise
 
-        self.export_dir = export_dir
-        self.publish_dir = publish_dir
+        if export_dir != self.export_dir or publish_dir != self.publish_dir:
+            self.export_dir = export_dir
+            self.publish_dir = publish_dir
 
-        self.update_asset_list()
-
-        self.find_stage_and_entity()
-
-    def change_workspace(self):
-        #if not self.stage or not self.entity:
-        #    return
-
-        print('Old workspace: {0}'.format(self.workspace))
-        try:
-            workspace = os.path.join(self.jobroot, 'vfx', self.stage, self.entity, self.software)
-            self.set_workspace(workspace)
-        except:
-            print('Missing some info')
-
-        print('New workspace: {0}'.format(self.workspace))
-
-    def find_stage_and_entity(self):
-        splits = self.workspace.split('/vfx/')
-
-        if len(splits) < 2:
-            print('TBA :: could not find vfx folder')
-            return
-
-        self.jobroot = splits[0]
-
-        stage = splits[1].split('/')[0]
-        self.set_stage(stage)
-
-        # get entity
-        entity = splits[1].split('/')[1]
-        self.set_entity(entity)
-
-    def set_stage(self, stage):
-        print('TBA :: set_stage: {0}'.format(stage))
-
-        if stage != self.stage:
-            self.stage = stage
-            self.stage_btn.setText(stage)
-
-            self.find_first_entity()
-
-            #self.change_workspace()
-
-    def find_first_entity(self):
-        print('TBA :: find_first_entity')
-        try:
-            entity_dir = os.path.join(self.jobroot, 'vfx', self.stage)
-
-            if os.path.exists(entity_dir):
-                dirs = os.listdir(entity_dir)
-
-                for entity in dirs:
-                    print('check entity: {0}'.format(entity))
-                    if not entity.startswith('.'):
-                        self.set_entity(entity)
-                        return
-        except:
-            print('Missing some info')
-
-    def set_entity(self, entity):
-        print('set_entity {0}'.format(entity))
-
-        if entity != self.entity:
-            self.entity = entity
-            self.entity_btn.setText(entity)
-
-            # remove menu
-            self.entity_menu = None
-
-            self.change_workspace()
             self.update_asset_list()
 
-    def update_entity_menu(self):
-        print('TBA :: update_entity_menu')
+    def update_breadcrumbs(self):
+        print('TBA :: update_breadcrumbs')
+        self.update_stages_combo()
 
-        if not self.workspace:
-            print('Couldnt find workspace')
-            return
+    def update_stages_combo(self):
+        print('TBA :: update_stages_combo')
 
-        self.entity_menu = QtWidgets.QMenu(self)
-        self.entity_menu.setCursor(QtCore.Qt.PointingHandCursor)
+        # store currently selected item
+        selItem = self.stage_combo.currentText()
 
-        entities_dir = os.path.join(self.workspace, '..', '..', '..', self.stage_btn.text())
+        # clear combo
+        self.stage_combo.clear()
+
+        # update stages combo
+        stages_dir = self.jobroot
+
+        stages = []
+
+        if os.path.exists(stages_dir):
+            stages = sorted(os.listdir(stages_dir))
+        else:
+            print('TBA :: stages_dir does not exists: {0}'.format(stages_dir))
+
+        self.stage_combo.addItems(stages)
+
+        # reselect old stage if found
+        if selItem in stages:
+            self.stage_combo.setCurrentText(selItem)
+        elif self.stage in stages:
+            # select currently selected stage
+            self.stage_combo.setCurrentText(self.stage)
+        else:
+            # otherwise set to the first item in the list
+            self.stage = stages[0]
+
+        self.update_entities_combo()
+
+    def update_entities_combo(self):
+        print('TBA :: update_entities_combo')
+
+        # store currently selected item
+        selEntity = self.entity_combo.currentText()
+
+        print('TBA :: old entity: {0}'.format(selEntity))
+
+        # clear combo
+        self.entity_combo.clear()
+
+        # update stages combo
+        entities_dir = os.path.join(self.jobroot, self.stage)
 
         entities = []
 
         if os.path.exists(entities_dir):
-            entities = os.listdir(entities_dir)
+            entities = sorted(os.listdir(entities_dir))
+        else:
+            print('TBA :: entities_dir does not exists: {0}'.format(entities_dir))
 
-        # populate menu
-        for entity in entities:
-            # ignore hidden files
-            if not entity.startswith('.'):
-                self.entity_menu.addAction(entity, lambda entity=entity: self.set_entity(entity))
+        print('TBA :: found entities in stage: {0}'.format(entities))
 
-        self.entity_btn.setMenu(self.entity_menu)
-        self.entity_btn.showMenu()
+        self.entity_combo.addItems(entities)
+
+        # reselect old entity if found
+        if selEntity in entities:
+            self.entity = selEntity
+            self.entity_combo.setCurrentText(selEntity)
+        # select currently selected entity
+        elif self.entity in entities:
+            self.entity_combo.setCurrentText(self.entity)
+        else:
+            # otherwise set to the first item in the list
+            self.entity = entities[0]
+
+        # if entity has changed we need to update the workspace (and asset list)
+        print('TBA :: new entity: {0}'.format(self.entity))
+
+        if selEntity != self.entity:
+            self.update_workspace()
+
+    def on_stage_updated(self, stage):
+        # ensure text is correct - doesnt seem to pass the correct result when triggered programatically
+        stage = self.stage_combo.currentText()
+        print('TBA :: on_stage_updated: {0}'.format(stage))
+
+        if stage != self.stage:
+            self.stage = stage
+
+            self.update_entities_combo()
+
+    def on_entity_updated(self, entity):
+        # ensure text is correct - doesnt seem to pass the correct result when triggered programatically
+        entity = self.entity_combo.currentText()
+        print('on_entity_updated: {0}'.format(entity))
+
+        if entity != self.entity:
+            self.entity = entity
+            self.update_workspace()
+
+    def on_refresh(self):
+        self.update_asset_list()
+        self.update_breadcrumbs()
 
     def update_asset_list(self):
         print('TBA :: update_asset_list')
@@ -404,9 +449,6 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
                 else:
                     self.darkenItem(item)
 
-    def onSelectionUpdate(self):
-        print('TBA :: onSelectionUpdate')
-
     def asset_right_clicked(self, pos):
         print('TBA :: asset_right_clicked')
 
@@ -476,6 +518,21 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     # ----------------------------------------------------------------------
     # helper functions
     # ----------------------------------------------------------------------
+    def splitall(self, path):
+        allparts = []
+        while 1:
+            parts = os.path.split(path)
+            if parts[0] == path:  # sentinel for absolute paths
+                allparts.insert(0, parts[0])
+                break
+            elif parts[1] == path: # sentinel for relative paths
+                allparts.insert(0, parts[1])
+                break
+            else:
+                path = parts[0]
+                allparts.insert(0, parts[1])
+        return allparts
+
     def enableItem(self, item):
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         item.setTextColor(QtGui.QColor('white'))
