@@ -93,6 +93,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(0,0,0,0)
 
         # header layout for title and refresh btn
         header_layout = QtWidgets.QHBoxLayout()
@@ -255,7 +256,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         else:
             print('TBA :: stages_dir does not exists: {0}'.format(stages_dir))
 
-        self.stage_combo.addItems(stages)
+        for stage in stages:
+            if not stage.startswith('.'):
+                self.stage_combo.addItem(stage)
 
         # reselect old stage if found
         if selItem in stages:
@@ -292,7 +295,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         print('TBA :: found entities in stage: {0}'.format(entities))
 
-        self.entity_combo.addItems(entities)
+        for entity in entities:
+            if not entity.startswith('.'):
+                self.entity_combo.addItem(entity)
 
         # reselect old entity if found
         if selEntity in entities:
@@ -331,6 +336,10 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             self.update_workspace()
 
     def on_refresh(self):
+        if not self.workspace:
+            print('TBA :: workspace not set, exiting')
+            return
+
         self.update_asset_list()
         self.update_breadcrumbs()
 
