@@ -17,6 +17,8 @@ class TBA_IO_export_options(QtWidgets.QDialog):
         # unique object name for maya
         self.setObjectName('TBA_IO_export_options')
 
+        self.setFixedHeight(90)
+
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -25,8 +27,11 @@ class TBA_IO_export_options(QtWidgets.QDialog):
         # work range radio buttons
         self.rb_curFrame = QtWidgets.QRadioButton("Current Frame")
         self.rb_curFrame.setChecked(True)
+        self.rb_curFrame.setCursor(QtCore.Qt.PointingHandCursor)
         self.rb_workRange = QtWidgets.QRadioButton("Time Slider")
+        self.rb_workRange.setCursor(QtCore.Qt.PointingHandCursor)
         self.rb_startEnd = QtWidgets.QRadioButton("Start End")
+        self.rb_startEnd.setCursor(QtCore.Qt.PointingHandCursor)
 
         self.range_start_le = QtWidgets.QLineEdit('1001')
         self.range_start_le.setValidator(QtGui.QIntValidator()) # only allow integers

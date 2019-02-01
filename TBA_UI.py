@@ -122,7 +122,7 @@ class radioButton(QtWidgets.QWidget):
         paint.drawEllipse(3, 3, width, width)
 
 class TBA_list_draggable(QtWidgets.QListWidget):
-    rightClicked = QtCore.Signal(QtCore.QEvent)
+    rightClicked = QtCore.Signal(list)
     selItem = None
 
     def __init__(self):
@@ -140,6 +140,8 @@ class TBA_list_draggable(QtWidgets.QListWidget):
         if not self.selectedItems():
             print('No item selected')
             return
+
+        # send selected text and position relative to current widget
 
         self.rightClicked.emit(self.mapToGlobal(event.pos()))
 
@@ -184,7 +186,6 @@ class TBA_list_draggable(QtWidgets.QListWidget):
             if self.item(i).flags() & QtCore.Qt.ItemIsSelectable:
                 self.setCurrentRow(i)
                 self.setFocus()
-
 
 class TBA_list(QtWidgets.QWidget):
     rightClicked = QtCore.Signal(QtCore.QEvent)
@@ -295,3 +296,4 @@ class TBA_list(QtWidgets.QWidget):
             return
 
         self.rightClicked.emit(self.mapToGlobal(event.pos()))
+

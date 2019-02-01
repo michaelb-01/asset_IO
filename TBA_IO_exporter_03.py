@@ -13,9 +13,52 @@ from TBA_IO_asset_list import TBA_IO_asset_list
 
 from TBA_IO_object_list import TBA_IO_object_list
 from TBA_IO_notes import TBA_IO_notes
+from TBA_IO_export_options import TBA_IO_export_options
 
+# ----------------------------------------------------------------------
+# Environment detection
+# ----------------------------------------------------------------------
+
+try:
+    import maya.cmds as mc
+    import maya.OpenMayaUI as omui
+    from shiboken2 import wrapInstance
+    MAYA = True
+except ImportError:
+    MAYA = False
+
+try:
+    import nuke
+    import nukescripts
+    NUKE = True
+except ImportError:
+    NUKE = False
+
+STANDALONE = False
+if not MAYA and not NUKE:
+    STANDALONE = True
 
 class TBA_IO_exporter(QtWidgets.QDialog):
+    dlg_instance = None
+
+    @classmethod
+    def show_dialog(cls):
+        if not cls.dlg_instance:
+            cls.dlg_instance = TBA_IO_exporter(maya_main_window())
+
+            module_path = os.path.dirname(os.path.abspath(__file__))
+
+            cls.dlg_instance.setStyleSheet(sqss_compiler.compile(
+                os.path.join(module_path,'TBA_stylesheet.scss'),
+                os.path.join(module_path,'variables.scss'),
+            ))
+
+        if cls.dlg_instance.isHidden():
+            cls.dlg_instance.show()
+        else:
+            cls.dlg_instance.raise_()
+            cls.dlg_instance.activateWindow()
+
     importer = False
 
     def __init__(self, parent=None):
@@ -38,7 +81,11 @@ class TBA_IO_exporter(QtWidgets.QDialog):
 
         self.object_list = TBA_IO_object_list()
         self.notes = TBA_IO_notes()
-        pass
+
+        self.export_options = TBA_IO_export_options()
+
+        self.export_btn = QtWidgets.QPushButton('Export')
+        self.export_btn.setCursor(QtCore.Qt.PointingHandCursor)
 
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
@@ -51,11 +98,15 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         col2_layout = QtWidgets.QVBoxLayout()
         col2_layout.addWidget(self.object_list)
         col2_layout.addWidget(self.notes)
+        col2_layout.addWidget(self.export_options)
+
+        export_buttons_layout = QtWidgets.QHBoxLayout()
+        export_buttons_layout.addWidget(self.export_btn)
+
+        col2_layout.addLayout(export_buttons_layout)
 
         main_layout.addLayout(col1_layout)
         main_layout.addLayout(col2_layout)
-
-        pass
 
     def create_connections(self):
         self.collections.list.clicked.connect(self.collection_clicked)
@@ -63,7 +114,17 @@ class TBA_IO_exporter(QtWidgets.QDialog):
 
     def collection_clicked(self):
         print('collection_clicked, load objects')
-        
+
+# ----------------------------------------------------------------------
+# DCC application helper functions
+# ----------------------------------------------------------------------
+
+def maya_main_window():
+    # get pointer to maya's main window
+    main_window_ptr = omui.MQtUtil.mainWindow()
+    # return window as a QWidget
+    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 

@@ -6,7 +6,6 @@ class MyDialog(QtWidgets.QDialog):
         super(MyDialog, self).__init__(parent)
 
         self.setWindowTitle('Modal Dialogs')
-        self.setMinimumSize(300,80)
 
         # remove help icon (question mark) from window
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -17,12 +16,20 @@ class MyDialog(QtWidgets.QDialog):
         self.create_connections()
 
     def create_widgets(self):
+        self.frame = QtWidgets.QFrame(self)
+        self.frame.setFrameStyle(QtWidgets.QFrame.StyledPanel | QtWidgets.QFrame.Sunken)
+
         self.combo = QtWidgets.QComboBox()
         self.combo.addItems(['one','two','three'])
 
+        self.combo.setStyleSheet('''QComboBox:on { /* shift the text when the popup opens */
+    padding-top: 3px;
+    padding-left: 15px;
+}''')
+
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
-        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout = QtWidgets.QVBoxLayout(self.frame)
 
         main_layout.addWidget(self.combo)
 

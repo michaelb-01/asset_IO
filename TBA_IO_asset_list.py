@@ -39,6 +39,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     export_dir = ''
     publish_dir = ''
 
+    sel_asset = ''
+
     DARK_COLOUR = QtGui.QColor(80,85,95)
 
     def __init__(self, parent=None):
@@ -52,9 +54,6 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.create_connections()
 
     def create_widgets(self):
-        self.header_label = QtWidgets.QLabel('Asset Browser')
-        self.header_label.setObjectName('h2')
-
         self.home_icon = QtGui.QPixmap('icons/home_white.png')
         self.home_btn = QtWidgets.QPushButton('')
         self.home_btn.setCursor(QtCore.Qt.PointingHandCursor)
@@ -64,15 +63,21 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.right_btn = QtWidgets.QPushButton('')
         self.right_btn.setDisabled(True)
         self.right_btn.setIcon(self.right_icon)
+        self.right_btn.setFixedWidth(20)
+        self.right_btn.setStyleSheet('QPushButton { background-color: none;}')
 
         self.right_icon2 = QtGui.QPixmap('icons/arrow_right_white.png')
         self.right_btn2 = QtWidgets.QPushButton('')
         self.right_btn2.setDisabled(True)
         self.right_btn2.setIcon(self.right_icon2)
+        self.right_btn2.setFixedWidth(20)
+        self.right_btn2.setStyleSheet('QPushButton { background-color: none;}')
 
         self.stage_combo = QtWidgets.QComboBox()
+        self.stage_combo.setCursor(QtCore.Qt.PointingHandCursor)
 
         self.entity_combo = QtWidgets.QComboBox()
+        self.entity_combo.setCursor(QtCore.Qt.PointingHandCursor)
 
         self.refresh_btn = QtWidgets.QPushButton('')
         self.refresh_btn.setCursor(QtCore.Qt.PointingHandCursor)
@@ -97,7 +102,6 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         # header layout for title and refresh btn
         header_layout = QtWidgets.QHBoxLayout()
-        header_layout.addWidget(self.header_label)
         header_layout.addWidget(self.home_btn)
         header_layout.addWidget(self.right_btn)
         header_layout.addWidget(self.stage_combo)
@@ -458,8 +462,14 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
                 else:
                     self.darkenItem(item)
 
-    def asset_right_clicked(self, pos):
+    def asset_right_clicked(self, eventList):
+        item = eventList[0]
+        pos = eventList[1]
+
         print('TBA :: asset_right_clicked')
+
+        print('TBA :: name: {0}'.format(item.text()))
+        print('TBA :: selAsset: {0}'.format(self.sel_asset))
 
         contextMenu = QtWidgets.QMenu(self)
         contextMenu.setCursor(QtCore.Qt.PointingHandCursor)
@@ -474,6 +484,20 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         elif action == exploreAct:
             print('explore asset')
             self.exploreFile(0)
+
+    def exploreFile(self, which):
+        print('TBA :: export_dir: {0}'.format(self.export_dir))
+        return
+        asset_path = os.path.join()
+
+        if self.platform == "win32":
+            print('Explore file in windows explorer')
+            subprocess.Popen(r'explorer /select, ' + self.exportResults[which])
+        elif self.platform == "darwin":
+            print('Explore file in max finder')
+            subprocess.Popen(["open", self.exportResults[which]])
+        else:
+            print('OS is linux, ignoring..')
 
     def clearList(self, listwidget):
         for i in range(listwidget.count()):

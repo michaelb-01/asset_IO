@@ -24,6 +24,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
     def create_widgets(self):
         self.header = QtWidgets.QLabel('Collections')
         self.header.setAlignment(QtCore.Qt.AlignTop)
+        self.header.setFixedHeight(24)
 
         self.list = QtWidgets.QListWidget()
 
@@ -42,7 +43,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
                                     }
                                     QListWidget::item {
                                         background-color: rgb(80,85,95);
-                                        height: 30px;
+                                        height: 25px;
                                         margin: 0;
                                         padding: 0;
                                         border-bottom: 1px solid #333;
@@ -55,7 +56,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QVBoxLayout(self)
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(2)
         main_layout.setContentsMargins(0,0,0,0)
 
         header_layout = QtWidgets.QHBoxLayout()

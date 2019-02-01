@@ -150,7 +150,7 @@ QToolTip {
 
 // COMBOBOX (DROPDOWN)
 QComboBox {
-  background-color: $grey-dark;
+  background-color: $grey-light;
   padding: 5px;
 }
 
@@ -158,14 +158,27 @@ QComboBox:drop-down {
   font-weight: bold;
   border: 0px;
   border-radius: 4px;
-  width: 24px;
+  width: 20px;
   max-height: 44px;
+}
+
+QComboBox QAbstractItemView {
+  outline: 0;
+}
+
+// hover combo item
+QListView {
+  selection-background-color: $primary-hover;
+}
+
+QComboBox QAbstractItemView:selected {
+  background-color: red;
 }
 
 QComboBox:down-arrow {
   image: url(icons/arrow_down_white.png);
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 QComboBox::indicator{
