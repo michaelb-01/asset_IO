@@ -85,9 +85,15 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.refresh_btn.setIcon(self.refresh_icon)
 
         self.asset_list_label = QtWidgets.QLabel('Assets')
+        self.asset_list_label.setFixedHeight(35)
         self.asset_list = TBA_UI.TBA_list_draggable()
 
+        self.add_asset_btn = QtWidgets.QPushButton('+')
+        self.add_asset_btn.setCursor(QtCore.Qt.PointingHandCursor)
+        self.add_asset_btn.setStyleSheet('QPushButton { font-size: 20px; width:24px; height:24px; margin:0; padding:0 0 4 1;}')
+
         self.types_list_label = QtWidgets.QLabel('Tasks')
+        self.types_list_label.setFixedHeight(27)
         self.types_list = TBA_UI.TBA_list_draggable()
 
         for task in self.TASKS:
@@ -115,7 +121,15 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         # asset list layout
         asset_list_layout = QtWidgets.QVBoxLayout()
-        asset_list_layout.addWidget(self.asset_list_label)
+        asset_list_layout.setSpacing(0)
+
+        asset_list_header_layout = QtWidgets.QHBoxLayout()
+
+        asset_list_header_layout.addWidget(self.asset_list_label)
+        asset_list_header_layout.addStretch()
+        asset_list_header_layout.addWidget(self.add_asset_btn)
+
+        asset_list_layout.addLayout(asset_list_header_layout)
         asset_list_layout.addWidget(self.asset_list)
 
         # types list layout
@@ -133,17 +147,23 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     def create_connections(self):
         self.refresh_btn.clicked.connect(self.on_refresh)
 
+        self.add_asset_btn.clicked.connect(self.add_temp_asset)
+
         #self.work_area.clicked.connect(self.get_work_area)
         #self.stage_btn.clicked.connect(self.on_stage_clicked)
 
         self.asset_list.itemSelectionChanged.connect(self.on_asset_selected)
         self.asset_list.rightClicked.connect(self.asset_right_clicked)
+        self.asset_list.currentTextChanged.connect(self.check_temp_asset)
 
         self.stage_combo.activated.connect(self.on_stage_updated)
         self.entity_combo.activated.connect(self.on_entity_updated)
 
         #self.types_list.itemSelectionChanged.connect(self.on_typ)
         self.types_list.rightClicked.connect(self.asset_right_clicked)
+
+    def test(self):
+        print('TESTTTT')
 
     def set_workspace(self, workspace=None):
         # workspace is set relative to current scene
@@ -347,6 +367,26 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.update_asset_list()
         self.update_breadcrumbs()
 
+    def add_temp_asset(self):
+        # check if editable item already exists
+        for i in range(0, self.asset_list.count()):
+            if self.asset_list.item(i).flags() & QtCore.Qt.ItemIsEditable:
+                return
+
+        item = QtWidgets.QListWidgetItem('')
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+        
+        self.asset_list.addItem(item)
+        self.asset_list.setFocus()
+
+        item.setSelected(True)
+
+        self.asset_list.editItem(item)
+
+    def check_temp_asset(self, text):
+        print('TBA :: check_temp_asset')
+        print(text)
+
     def update_asset_list(self):
         print('TBA :: update_asset_list')
 
@@ -409,7 +449,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         if not self.asset_list.selectedItems():
             print('on_asset_selected: set sel_asset to None')
             self.sel_asset = None
-        else:
+        elif item:
             self.sel_asset = item.text()
             print('on_asset_selected: set sel_asset to {0}'.format(self.sel_asset))
 
@@ -565,6 +605,16 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
                 path = parts[0]
                 allparts.insert(0, parts[1])
         return allparts
+
+    def disableAllTypes(self):
+        print('disableAllTypes')
+        # disable all type items
+        if self.importer:
+            for i in range(self.types_list.count()):
+                self.disableItem(self.types_list.item(i))
+        else:
+            for i in range(self.types_list.count()):
+                self.darkenItem(self.types_list.item(i))
 
     def enableItem(self, item):
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
