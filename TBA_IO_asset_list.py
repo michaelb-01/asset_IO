@@ -154,16 +154,13 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         self.asset_list.itemSelectionChanged.connect(self.on_asset_selected)
         self.asset_list.rightClicked.connect(self.asset_right_clicked)
-        self.asset_list.currentTextChanged.connect(self.check_temp_asset)
+        # self.asset_list.currentTextChanged.connect(self.test)
 
         self.stage_combo.activated.connect(self.on_stage_updated)
         self.entity_combo.activated.connect(self.on_entity_updated)
 
         #self.types_list.itemSelectionChanged.connect(self.on_typ)
         self.types_list.rightClicked.connect(self.asset_right_clicked)
-
-    def test(self):
-        print('TESTTTT')
 
     def set_workspace(self, workspace=None):
         # workspace is set relative to current scene
@@ -370,7 +367,10 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
     def add_temp_asset(self):
         # check if editable item already exists
         for i in range(0, self.asset_list.count()):
-            if self.asset_list.item(i).flags() & QtCore.Qt.ItemIsEditable:
+            item = self.asset_list.item(i)
+            if item.flags() & QtCore.Qt.ItemIsEditable:
+                item.setSelected(True)
+                self.asset_list.editItem(item)
                 return
 
         item = QtWidgets.QListWidgetItem('')
@@ -382,6 +382,28 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         item.setSelected(True)
 
         self.asset_list.editItem(item)
+
+        self.asset_list.itemDelegate().commitData.connect(self.temp_asset_edited)
+
+    def temp_asset_edited(self):
+        print('temp asset edited')
+
+        if not self.asset_list.selectedItems():
+            return
+
+        item = self.asset_list.selectedItems()[0]
+
+        # remove if empty
+        if not item.text():
+            self.asset_list.takeItem(self.asset_list.row(item))
+        # check if already exists
+        found = self.asset_list.findItems(item.text(), QtCore.Qt.MatchExactly)
+
+        if found:
+            # need to also check found item is not temp asset
+            self.asset_list.takeItem(self.asset_list.row(item))
+
+        self.on_asset_selected()
 
     def check_temp_asset(self, text):
         print('TBA :: check_temp_asset')
@@ -443,14 +465,13 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
     def on_asset_selected(self):
         print('TBA :: on_asset_selected')
-        item = self.asset_list.currentItem()
 
         # if user deselected the item
         if not self.asset_list.selectedItems():
             print('on_asset_selected: set sel_asset to None')
             self.sel_asset = None
-        elif item:
-            self.sel_asset = item.text()
+        else:
+            self.sel_asset = self.asset_list.selectedItems()[0].text()
             print('on_asset_selected: set sel_asset to {0}'.format(self.sel_asset))
 
         # update type list
