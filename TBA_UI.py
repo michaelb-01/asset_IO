@@ -142,8 +142,9 @@ class TBA_list_draggable(QtWidgets.QListWidget):
             return
 
         # send selected text and position relative to current widget
+        item = self.selectedItems()[0]
 
-        self.rightClicked.emit(self.mapToGlobal(event.pos()))
+        self.rightClicked.emit([item, self.mapToGlobal(event.pos())])
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():

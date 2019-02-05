@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
@@ -310,7 +311,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         entities = []
 
         if os.path.exists(entities_dir):
-            entities = sorted(os.listdir(entities_dir))
+            #entities = sorted(os.listdir(entities_dir))
+            entities = sorted([f for f in os.listdir(entities_dir) if not f.startswith('.')])
         else:
             print('TBA :: entities_dir does not exists: {0}'.format(entities_dir))
 
@@ -391,17 +393,18 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         if not self.asset_list.selectedItems():
             return
 
-        item = self.asset_list.selectedItems()[0]
+        temp_item = self.asset_list.selectedItems()[0]
 
         # remove if empty
-        if not item.text():
-            self.asset_list.takeItem(self.asset_list.row(item))
-        # check if already exists
-        found = self.asset_list.findItems(item.text(), QtCore.Qt.MatchExactly)
+        if not temp_item.text():
+            self.asset_list.takeItem(self.asset_list.row(temp_item))
 
-        if found:
-            # need to also check found item is not temp asset
-            self.asset_list.takeItem(self.asset_list.row(item))
+        # remove item if its name already exists
+        found = self.asset_list.findItems(temp_item.text(), QtCore.Qt.MatchExactly)
+
+        # always returns itself, so more than 1 means its found another
+        if len(found) > 1:
+            self.asset_list.takeItem(self.asset_list.row(temp_item))
 
         self.on_asset_selected()
 
@@ -523,14 +526,13 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
                 else:
                     self.darkenItem(item)
 
-    def asset_right_clicked(self, eventList):
-        item = eventList[0]
-        pos = eventList[1]
-
+    def asset_right_clicked(self, eventlist):
         print('TBA :: asset_right_clicked')
 
-        print('TBA :: name: {0}'.format(item.text()))
         print('TBA :: selAsset: {0}'.format(self.sel_asset))
+
+        item = eventlist[0]
+        pos = eventlist[1]
 
         contextMenu = QtWidgets.QMenu(self)
         contextMenu.setCursor(QtCore.Qt.PointingHandCursor)
@@ -540,23 +542,21 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         action = contextMenu.exec_(pos)
 
+        # path to asset
+
         if action == deleteAct:
             self.deleteAsset()
         elif action == exploreAct:
             print('explore asset')
-            self.exploreFile(0)
+            self.exploreFile(os.path.join(self.export_dir,item.text()))
 
-    def exploreFile(self, which):
-        print('TBA :: export_dir: {0}'.format(self.export_dir))
-        return
-        asset_path = os.path.join()
-
-        if self.platform == "win32":
+    def exploreFile(self, asset_path):
+        if sys.platform == "win32":
             print('Explore file in windows explorer')
-            subprocess.Popen(r'explorer /select, ' + self.exportResults[which])
-        elif self.platform == "darwin":
-            print('Explore file in max finder')
-            subprocess.Popen(["open", self.exportResults[which]])
+            subprocess.Popen(r'explorer /select, ' + asset_path)
+        elif sys.platform == "darwin":
+            print('Explore file in mac finder')
+            subprocess.Popen(["open", asset_path])
         else:
             print('OS is linux, ignoring..')
 
