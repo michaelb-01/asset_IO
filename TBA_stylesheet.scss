@@ -151,7 +151,8 @@ QToolTip {
 // COMBOBOX (DROPDOWN)
 QComboBox {
   background-color: $grey-light;
-  padding: 5px;
+  padding: 2px 20px 2px 5px;
+  // padding: 5px 30px 5px 5px;
 }
 
 QComboBox:drop-down {
@@ -180,13 +181,6 @@ QComboBox:down-arrow {
   width: 20px;
   height: 20px;
 }
-
-QComboBox::indicator{
-  display: hidden;
-  width: 0px;
-  height: 0px;
-}
-
 
 // QMENU
 QMenu {

@@ -22,6 +22,8 @@ class MyDialog(QtWidgets.QDialog):
         self.combo = QtWidgets.QComboBox()
         self.combo.addItems(['one','two','three'])
 
+        print(self.combo.style())
+
         self.combo.setStyleSheet('''QComboBox:on { /* shift the text when the popup opens */
     padding-top: 3px;
     padding-left: 15px;

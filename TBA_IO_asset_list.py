@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import shutil
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
@@ -75,6 +76,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.right_btn2.setStyleSheet('QPushButton { background-color: none;}')
 
         self.stage_combo = QtWidgets.QComboBox()
+        self.stage_combo.addItems(['shots','builasdfd'])
         self.stage_combo.setCursor(QtCore.Qt.PointingHandCursor)
 
         self.entity_combo = QtWidgets.QComboBox()
@@ -292,6 +294,9 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             # otherwise set to the first item in the list
             self.stage = stages[0]
 
+        # update width to fit items
+        # width = self.stage_combo.minimumSizeHint().width()
+        # self.stage_combo.view().setMinimumWidth(width+10)
         self.update_entities_combo()
 
     def update_entities_combo(self):
@@ -537,20 +542,32 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         contextMenu = QtWidgets.QMenu(self)
         contextMenu.setCursor(QtCore.Qt.PointingHandCursor)
 
-        deleteAct = contextMenu.addAction('Delete')
-        exploreAct = contextMenu.addAction('Explore')
+        exploreAct = contextMenu.addAction('Explore Exports Asset')
+        deleteAct = contextMenu.addAction('Delete Exports Asset')
+        nullAct = contextMenu.addAction('-')
+        nullAct.setSeparator(True)
+        explorePubAct = contextMenu.addAction('Explore Published Asset')
+        deletePubAct = contextMenu.addAction('Delete Published Asset')
 
         action = contextMenu.exec_(pos)
 
         # path to asset
 
-        if action == deleteAct:
-            self.deleteAsset()
-        elif action == exploreAct:
-            print('explore asset')
+        if action == exploreAct:
             self.exploreFile(os.path.join(self.export_dir,item.text()))
+        elif action == deleteAct:
+            self.deleteAsset(os.path.join(self.export_dir,item.text()))
+        elif action == explorePubAct:
+            self.exploreFile(os.path.join(self.publish_dir,item.text()))
+        elif action == deletePubAct:
+            self.deleteAsset(os.path.join(self.publish_dir,item.text()))
 
     def exploreFile(self, asset_path):
+        print('exploreFile')
+        if not os.path.exists(asset_path):
+            print('Asset does not exists at: {0}'.format(asset_path))
+            return
+
         if sys.platform == "win32":
             print('Explore file in windows explorer')
             subprocess.Popen(r'explorer /select, ' + asset_path)
@@ -559,6 +576,26 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             subprocess.Popen(["open", asset_path])
         else:
             print('OS is linux, ignoring..')
+
+    def deleteAsset(self, asset_path):
+        print('deleteAsset')
+        if not os.path.exists(asset_path):
+            print('Asset does not exists at: {0}'.format(asset_path))
+            return
+
+        res = QtWidgets.QMessageBox.question(self, "You are about to delete an asset on disk!", "Are you sure?",
+                                QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+
+        if res == QtWidgets.QMessageBox.Ok:
+            print('Deleting: {0}'.format(asset_path))
+
+            try:
+                shutil.rmtree(asset_path)
+            except OSError as e:
+                print ("Error: %s - %s." % (e.asset_path, e.strerror))
+            else:
+                print('Successfully deleted: {0}'.format(asset_path))
+                self.update_asset_list()
 
     def clearList(self, listwidget):
         for i in range(listwidget.count()):

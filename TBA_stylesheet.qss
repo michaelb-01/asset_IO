@@ -125,8 +125,8 @@ QToolTip {
 
 QComboBox {
   background-color: rgb(100,105,115);
-  padding: 5px;
-}
+  padding: 2px 20px 2px 5px;
+  }
 
 QComboBox:drop-down {
   font-weight: bold;
@@ -153,13 +153,6 @@ QComboBox:down-arrow {
   width: 20px;
   height: 20px;
 }
-
-QComboBox::indicator{
-  display: hidden;
-  width: 0px;
-  height: 0px;
-}
-
 
 QMenu {
   background-color: rgb(80,85,95);
