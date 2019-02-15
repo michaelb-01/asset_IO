@@ -87,6 +87,7 @@ QListWidget::item:disabled {
 QPushButton {
   padding: 5px;
   //background-color: $grey-light;
+  border: 1px solid $grey-light;
 }
 
 QPushButton::menu-indicator {
