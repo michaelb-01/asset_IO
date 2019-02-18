@@ -28,8 +28,8 @@ class TBA_IO_notes(QtWidgets.QDialog):
 
         self.thumbnail_icon = QtGui.QPixmap('icons/take_thumbnail_grey_light.png')
         self.thumbnail_btn = QtWidgets.QPushButton('')
-        self.thumbnail_btn.setMinimumSize(120,100)
-        self.thumbnail_btn.setIconSize(QtCore.QSize(100,100))
+        self.thumbnail_btn.setMinimumSize(130,100)
+        self.thumbnail_btn.setIconSize(QtCore.QSize(150,100))
         self.thumbnail_btn.setIcon(self.thumbnail_icon)
 
     def create_layouts(self):

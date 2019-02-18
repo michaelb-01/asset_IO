@@ -1,7 +1,7 @@
 * {
 	//font-family: "Roboto", Times, serif;
 	//font-weight: light;
-  font-size: 12px;
+  // font-size: 12px;
   color:$grey-lighter;
 }
 
@@ -87,7 +87,16 @@ QListWidget::item:disabled {
 QPushButton {
   padding: 5px;
   //background-color: $grey-light;
-  border: 1px solid $grey-light;
+  // border: 1px solid $grey-light;
+}
+
+QPushButton[stroke="true"] {
+  background-color: $secondary-hover;
+  border: 1px solid $grey-lighter;
+}
+
+QPushButton[stroke="true"]:hover {
+  background-color: $secondary;
 }
 
 QPushButton::menu-indicator {
