@@ -704,12 +704,12 @@ if __name__ == "__main__":
     tba_io_asset_list = TBA_IO_asset_list()
 
     # this would be called from the parent module
-    workspace = os.path.join(module_path, 'vfx', 'shots', 'sh0001', 'maya')
-    export_dir = os.path.join(module_path, 'exports', 'assets')
-    publish_dir = os.path.join(module_path, '..', '_published3d', 'assets')
+    # workspace = os.path.join(module_path, 'vfx', 'shots', 'sh0001', 'maya')
+    # export_dir = os.path.join(module_path, 'exports', 'assets')
+    # publish_dir = os.path.join(module_path, '..', '_published3d', 'assets')
 
     # workspace
-    tba_io_asset_list.set_workspace(workspace)
+    # tba_io_asset_list.set_workspace(workspace)
     #tba_io_asset_list.update_exports_dirs(export_dir, publish_dir)
 
     # this would be the vfx folder of the job
