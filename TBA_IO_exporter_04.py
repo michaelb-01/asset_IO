@@ -91,7 +91,7 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         else:
             module_path = os.path.dirname(os.path.abspath(__file__))
             workspace = os.path.join(module_path, 'vfx', 'shots', 'sh0001', 'maya')
-            self.update_maya_workspace()
+            self.asset_list.set_workspace(workspace)
 
     def create_widgets(self):
         self.asset_list = TBA_IO_asset_list()

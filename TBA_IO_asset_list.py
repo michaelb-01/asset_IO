@@ -76,7 +76,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.right_btn2.setStyleSheet('QPushButton { background-color: none;}')
 
         self.stage_combo = QtWidgets.QComboBox()
-        self.stage_combo.addItems(['shots','builasdfd'])
+        self.stage_combo.addItems(['shots','build'])
         self.stage_combo.setCursor(QtCore.Qt.PointingHandCursor)
 
         self.entity_combo = QtWidgets.QComboBox()
@@ -292,7 +292,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             self.stage_combo.setCurrentText(self.stage)
         else:
             # otherwise set to the first item in the list
-            self.stage = stages[0]
+            if stages:
+                self.stage = stages[0]
 
         # update width to fit items
         # width = self.stage_combo.minimumSizeHint().width()
@@ -336,7 +337,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
             self.entity_combo.setCurrentText(self.entity)
         else:
             # otherwise set to the first item in the list
-            self.entity = entities[0]
+            if entities:
+                self.entity = entities[0]
 
         # if entity has changed we need to update the workspace (and asset list)
         print('TBA :: new entity: {0}'.format(self.entity))

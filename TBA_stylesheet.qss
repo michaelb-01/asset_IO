@@ -1,14 +1,15 @@
 * {
-		    color:rgb(200,205,210);
+		  font-size: 12px;
+  color:rgb(200,205,210);
 }
 
 QWidget {
-	background-color: rgb(80,85,95);
+	background-color: rgb(80,85,90);
   border: 0px;
 }
 
 QWidget#tbaDark {
-	background-color: rgb(53,56,64);
+	background-color: rgb(53,56,60);
 }
 
 QWidget#tbaLight {
@@ -16,13 +17,13 @@ QWidget#tbaLight {
 }
 
 QLineEdit {
-  background-color: rgb(53,56,64);
+  background-color: rgb(53,56,60);
   padding: 3px;
 }
 
 QLineEdit::disabled {
   background-color: rgb(100,105,115);
-  color:rgb(80,85,95);
+  color:rgb(80,85,90);
 }
 
 
@@ -32,12 +33,12 @@ QLabel#h2 {
 
 
 QPlainTextEdit {
-  background-color: rgb(53,56,64);
+  background-color: rgb(53,56,60);
 }
 
 QListWidget {
   padding: 10px;
-  background-color: rgb(53,56,64);
+  background-color: rgb(53,56,60);
   color: white;
 }
 
@@ -64,7 +65,7 @@ QListWidget#tempAsset::item {
 }
 
 QListWidget::item:disabled {
-	color: rgb(80,85,95);
+	color: rgb(80,85,90);
 }
 
 QPushButton {
@@ -97,6 +98,14 @@ QPushButton:disabled {
 
 QPushButton:pressed  {
   }
+
+QToolButton:hover {
+  background-color: rgba(207,66,53,0.5);
+}
+
+QToolButton:pressed {
+  background-color: rgb(207,66,53);
+}
 
 QScrollBar::up-arrow:vertical {
   image:url(icons/arrow_up_grey.png);
@@ -163,7 +172,7 @@ QComboBox:down-arrow {
 }
 
 QMenu {
-  background-color: rgb(80,85,95);
+  background-color: rgb(80,85,90);
 }
 
 QMenu::item {
@@ -213,13 +222,13 @@ QListView::indicator:unchecked {
 }
 
 QToolTip {
-  background-color: rgb(53,56,64);
+  background-color: rgb(53,56,60);
   color: white;
 }
 
 QPushButton#export_button {
   background-color: rgb(200,205,210);
-  color: rgb(80,85,95);
+  color: rgb(80,85,90);
   padding: 10px;
   font-size: 12px;
 }

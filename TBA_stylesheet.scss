@@ -1,7 +1,7 @@
 * {
 	//font-family: "Roboto", Times, serif;
 	//font-weight: light;
-  // font-size: 12px;
+  font-size: 12px;
   color:$grey-lighter;
 }
 
@@ -117,6 +117,14 @@ QPushButton:disabled {
 
 QPushButton:pressed  {
   //background-color:red;
+}
+
+QToolButton:hover {
+  background-color: $primary-hover;
+}
+
+QToolButton:pressed {
+  background-color: $primary;
 }
 
 // SCROLLBAR
