@@ -1,7 +1,7 @@
 import sys
 
 from PySide2 import QtCore, QtWidgets
-from shiboken2 import wrapInstance
+# from shiboken2 import wrapInstance
 
 try:
   import maya.OpenMayaUI as omui
