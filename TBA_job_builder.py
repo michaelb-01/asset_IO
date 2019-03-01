@@ -30,6 +30,12 @@ class TBA_job_builder(QtWidgets.QDialog):
         self.agency = QtWidgets.QLineEdit()
         self.job_name = QtWidgets.QLineEdit()
 
+        self.mode_toggle = QtWidgets.QCheckbox()
+
+        self.update_button = QtWidgets.QPushButton('Update')
+        self.update_button.setCursor(QtCore.Qt.PointingHandCursor)
+        self.update_button.hide()
+
         self.create_button = QtWidgets.QPushButton('Create')
         self.create_button.setCursor(QtCore.Qt.PointingHandCursor)
 
@@ -44,13 +50,14 @@ class TBA_job_builder(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout(self)
         form_layout = QtWidgets.QFormLayout()
         form_layout.setLabelAlignment(QtCore.Qt.AlignLeft)
-        
+
         form_layout.addRow('Server*:', self.server_combo)
         form_layout.addRow('Client*:', self.client)
         form_layout.addRow('Agency*:', self.agency)
         form_layout.addRow('Job Name*:', self.job_name)
 
         main_layout.addLayout(form_layout)
+        main_layout.addWidget(self.update_button)
         main_layout.addWidget(self.create_button)
         main_layout.addWidget(self.file_dialog_btn)
 
@@ -62,7 +69,7 @@ class TBA_job_builder(QtWidgets.QDialog):
         self.file_dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
 
         if self.file_dialog.exec_():
-            initial_path = "/Users/michaelbattcock/Documents/VFX/TBA/0000_TBA_rnd"
+            initial_path = "S:/"
             path = QtWidgets.QFileDialog().getExistingDirectory(self, "Choose Existing Job", initial_path, QtWidgets.QFileDialog.DirectoryOnly)
             # path = self.file_dialog.getExistingDirectory(self, "Choose Existing Job", initial_path, QtWidgets.QFileDialog.DirectoryOnly)
 

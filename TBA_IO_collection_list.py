@@ -7,9 +7,11 @@ sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 import sqss_compiler
 import TBA_UI
+import tba_maya_api
 
 class TBA_IO_collection_list(QtWidgets.QDialog):
     importer = False
+    cbIds = []
 
     def __init__(self, parent=None):
         super(TBA_IO_collection_list, self).__init__(parent)
@@ -21,17 +23,14 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.create_layouts()
         self.create_connections()
 
+        self.refresh_list()
+
     def create_widgets(self):
         self.header = QtWidgets.QLabel('Collections')
         self.header.setAlignment(QtCore.Qt.AlignTop)
         self.header.setFixedHeight(24)
 
         self.list = QtWidgets.QListWidget()
-
-        for name in ['one','two','three']:
-            item = QtWidgets.QListWidgetItem(name, self.list)
-            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
-            item.setCheckState(QtCore.Qt.Checked)
 
         self.add_btn = QtWidgets.QPushButton('+')
         self.add_btn.setCursor(QtCore.Qt.PointingHandCursor)
@@ -72,6 +71,20 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
     def create_connections(self):
         self.add_btn.clicked.connect(self.add_item)
+
+    def refresh_list(self):
+        tba_sets = tba_maya_api.get_maya_asset_sets()
+        cbIds = tba_maya_api.nameChangedCallback
+
+        for tba_set in tba_sets:
+            cbIds.append(tba_maya_api.nameChangedCallback(tba_set))
+
+        self.list.clear()
+
+        for name in asset_sets:
+            item = QtWidgets.QListWidgetItem(name, self.list)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
+            item.setCheckState(QtCore.Qt.Checked)
 
     def add_item(self):
         item = QtWidgets.QListWidgetItem('', self.list)

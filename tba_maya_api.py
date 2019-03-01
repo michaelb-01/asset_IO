@@ -1,5 +1,8 @@
 import maya.cmds as mc
 
+def get_maya_asset_sets():
+    return mc.ls('tba_asset*', type='objectSet')
+
 def export_selected():
     print('TBA :: export_selected')
 

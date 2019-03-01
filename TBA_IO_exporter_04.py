@@ -95,7 +95,7 @@ class TBA_IO_exporter(QtWidgets.QDialog):
 
     def create_widgets(self):
         self.asset_list = TBA_IO_asset_list()
-
+        self.collection_list = TBA_IO_collection_list()
         self.object_list = TBA_IO_object_list()
         self.notes = TBA_IO_notes()
 
@@ -111,6 +111,7 @@ class TBA_IO_exporter(QtWidgets.QDialog):
     def create_layouts(self):
         main_layout = QtWidgets.QVBoxLayout(self)
 
+        main_layout.addWidget(self.collection_list)
         main_layout.addWidget(self.asset_list)
         main_layout.addWidget(self.notes)
         main_layout.addWidget(self.export_options)

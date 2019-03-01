@@ -223,8 +223,8 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         print('TBA :: get_export_dirs, workspace is: {0}'.format(self.workspace))
 
-        export_dir = os.path.join(self.workspace, 'exports', 'assets')
-        publish_dir = os.path.join(self.workspace, '..', '_published3d', 'assets')
+        export_dir = os.path.abspath(os.path.join(self.workspace, 'exports', 'assets'))
+        publish_dir = os.path.abspath(os.path.join(self.workspace, '..', '_published3d', 'assets'))
 
         missing_dirs = []
 
@@ -384,7 +384,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         item = QtWidgets.QListWidgetItem('')
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
-        
+
         self.asset_list.addItem(item)
         self.asset_list.setFocus()
 
