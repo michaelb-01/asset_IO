@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/">
+       <file>icons/arrow_down_grey.png</file>
+       <file>icons/arrow_down_white.png</file>
+       <file>icons/arrow_right_white.png</file>
+       <file>icons/arrow_up_grey.png</file>
+       <file>icons/arrow_up_white.png</file>
+       <file>icons/camera_white.png</file>
+       <file>icons/checkbox_checked_white.png</file>
+       <file>icons/checkbox_unchecked_white.png</file>
+       <file>icons/home_white.png</file>
+       <file>icons/radio_button_checked_white.png</file>
+       <file>icons/radio_button_unchecked_white.png</file>
+       <file>icons/refresh_grey.png</file>
+       <file>icons/refresh_white.png</file>
+       <file>icons/take_thumbnail_grey_light.png</file>
+    </qresource>
+</RCC>

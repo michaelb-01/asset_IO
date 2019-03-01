@@ -1,30 +1,43 @@
 import os
 import maya.cmds as mc
-from maya import OpenMaya as om
+import maya.api.OpenMaya as om
+
+def maya_useNewAPI():
+     pass
 
 def nameToNode( name ):
-	"""Takes a node name(string) and returns an MObject"""
-
-	try:
-		selectionList = om.MSelectionList()
-		selectionList.add( name )
-		node = om.MObject()
-		selectionList.getDependNode( 0, node )
-		return node	
-	except:
-		raise RuntimeError('NameToNode() failed on %s' % name)
+    """
+    :param name: [string] the object path to get the MObject for
+    :return: [MObject] MObject
+    """
+    
+    try:
+        selectionList = om.MSelectionList()
+        selectionList.add( name )
+        return selectionList.getDependNode( 0 )	
+    except:
+        raise RuntimeError('NameToNode() failed on %s' % name)
 		
-def tbaNameChanged(*args):
-    print('tbaNameChanged')
+def nameChangedCallback(*args):
+    """
+    :param args[0]: [MObject] the node whose name changed
+    :param args[1]: [string] the old name
+    :param args[2]: [object] User defined data
+    """
     node = args[0]
-    # convert the MObject to a dep node
-    depNode = om.MFnDependencyNode(node)
-    oldName = args[1]
- 
-    print '----\nNameChangedCallback'
-    print 'newName: ', depNode.name()
-    print 'oldName', oldName
-    print 'type', depNode.typeName()
+    
+    # if node is a dag node
+    if node.hasFn( om.MFn.kDagNode ):
+        path = om.MDagPath.getAPathTo( node )
+        
+        # convert the MObject to a dep node
+        depNode = om.MFnDependencyNode(node)
+        oldName = args[1]
+     
+        print('----\nNameChangedCallback')
+        print('newName: {0}'.format(depNode.name()))
+        print('oldName: {0}'.format(oldName))
+        print 'type: {0}'.format(depNode.typeName)
 
 def exportAbc(filepath, rootObjs, start, end):
     root = ''
@@ -51,7 +64,7 @@ def export():
         print('Nothing selected')
         return
     
-    scene = mc.workspace(q=1,fullName=1)
+    scene = os.path.abspath(mc.workspace(q=1,fullName=1))
     
     # find publish folder relative to vfx folder in job
     parts = scene.split(os.sep)
@@ -71,6 +84,8 @@ def export():
     
     # asset type (selected from UI combobox)
     assetType = 'model'
+    
+    cbIds = []
     
     # export each selected object
     for obj in sel:
@@ -116,18 +131,19 @@ def export():
         
         if not mc.objExists(tbaSet):
             tbaSet = mc.sets(obj, name=tbaSet)
+            # lock set so it cant be renamed
+            mc.lockNode( tbaSet )
             
         #### create node callbacks ####
-        mObj = nameToNode(obj)
-        cb = om.MNodeMessage.addNameChangedCallback(mObj, tbaNameChanged)
-            
+        #mObj = nameToNode(obj)
+        #cb = om.MNodeMessage.addNameChangedCallback(mObj, nameChangedCallback)
+        #cbIds.append(cb)
         
+        return cbIds
+            
         print('Export alembic to: ' + abcPath)
         
     
 export()
 
-print cb
 
-om.MNodeMessage.removeCallback(cb)
-    

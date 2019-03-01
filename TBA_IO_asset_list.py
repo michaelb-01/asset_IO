@@ -56,19 +56,19 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         self.create_connections()
 
     def create_widgets(self):
-        self.home_icon = QtGui.QPixmap('icons/home_white.png')
+        self.home_icon = QtGui.QPixmap(':icons/home_white.png')
         self.home_btn = QtWidgets.QPushButton('')
         self.home_btn.setCursor(QtCore.Qt.PointingHandCursor)
         self.home_btn.setIcon(self.home_icon)
 
-        self.right_icon = QtGui.QPixmap('icons/arrow_right_white.png')
+        self.right_icon = QtGui.QPixmap(':icons/arrow_right_white.png')
         self.right_btn = QtWidgets.QPushButton('')
         self.right_btn.setDisabled(True)
         self.right_btn.setIcon(self.right_icon)
         self.right_btn.setFixedWidth(20)
         self.right_btn.setStyleSheet('QPushButton { background-color: none;}')
 
-        self.right_icon2 = QtGui.QPixmap('icons/arrow_right_white.png')
+        self.right_icon2 = QtGui.QPixmap(':icons/arrow_right_white.png')
         self.right_btn2 = QtWidgets.QPushButton('')
         self.right_btn2.setDisabled(True)
         self.right_btn2.setIcon(self.right_icon2)
@@ -84,7 +84,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
 
         self.refresh_btn = QtWidgets.QPushButton('')
         self.refresh_btn.setCursor(QtCore.Qt.PointingHandCursor)
-        self.refresh_icon = QtGui.QPixmap('icons/refresh_white.png')
+        self.refresh_icon = QtGui.QPixmap(':icons/refresh_white.png')
         self.refresh_btn.setIcon(self.refresh_icon)
 
         self.asset_list_label = QtWidgets.QLabel('Assets')
@@ -325,7 +325,7 @@ class TBA_IO_asset_list(QtWidgets.QDialog):
         print('TBA :: found entities in stage: {0}'.format(entities))
 
         for entity in entities:
-            if not entity.startswith('.'):
+            if not entity.startswith('.') and not entity.startswith('_'):
                 self.entity_combo.addItem(entity)
 
         # reselect old entity if found

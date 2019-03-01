@@ -16,7 +16,6 @@ import sqss_compiler
 import TBA_UI
 
 import TBA_IO_notes
-import TBA_IO_collection_list
 
 sys.dont_write_bytecode = True  # Avoid writing .pyc files
 

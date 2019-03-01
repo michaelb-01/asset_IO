@@ -7,14 +7,22 @@ sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 import sqss_compiler
 import TBA_UI
+
 import tba_maya_api
+#import maya.cmds as mc
+
+import TBA_IO_resources
+import TBA_IO_chips
 
 class TBA_IO_collection_list(QtWidgets.QDialog):
     importer = False
     cbIds = []
 
-    def __init__(self, parent=None):
+    app = None
+
+    def __init__(self, parent=None, app=None):
         super(TBA_IO_collection_list, self).__init__(parent)
+        self.app = app
 
         # unique object name for maya
         self.setObjectName('TBA_IO_collection_list')
@@ -23,7 +31,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.create_layouts()
         self.create_connections()
 
-        self.refresh_list()
+        #self.refresh()
 
     def create_widgets(self):
         self.header = QtWidgets.QLabel('Collections')
@@ -31,6 +39,9 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.header.setFixedHeight(24)
 
         self.list = QtWidgets.QListWidget()
+
+        self.chips = TBA_IO_chips.ChipsAutocomplete()
+        self.chips.addItems(['apple', 'lemon', 'orange', 'mango', 'papaya', 'strawberry'])
 
         self.add_btn = QtWidgets.QPushButton('+')
         self.add_btn.setCursor(QtCore.Qt.PointingHandCursor)
@@ -54,9 +65,11 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
-        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout = QtWidgets.QHBoxLayout(self)
         main_layout.setSpacing(2)
         main_layout.setContentsMargins(0,0,0,0)
+
+        list_layout = QtWidgets.QVBoxLayout()
 
         header_layout = QtWidgets.QHBoxLayout()
         header_layout.setContentsMargins(0,0,0,0)
@@ -66,27 +79,50 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         header_layout.addWidget(self.add_btn)
         header_layout.setAlignment(QtCore.Qt.AlignTop)
 
-        main_layout.addLayout(header_layout)
-        main_layout.addWidget(self.list)
+        list_layout.addLayout(header_layout)
+        list_layout.addWidget(self.list)
+
+        property_layout = QtWidgets.QVBoxLayout()
+        property_layout.addWidget(self.chips)
+
+        main_layout.addLayout(list_layout)
+        main_layout.addLayout(property_layout)
 
     def create_connections(self):
-        self.add_btn.clicked.connect(self.add_item)
+        if (self.app == 'maya'):
+            self.add_btn.clicked.connect(self.add_item_maya)
+        else:
+            self.add_btn.clicked.connect(self.add_item_standalone)
 
-    def refresh_list(self):
-        tba_sets = tba_maya_api.get_maya_asset_sets()
-        cbIds = tba_maya_api.nameChangedCallback
+    def refresh(self):
+        print('TBA_IO_collection_list - refresh_list')
 
-        for tba_set in tba_sets:
-            cbIds.append(tba_maya_api.nameChangedCallback(tba_set))
+        #cbIds.extend(tba_maya_api.set_asset_callbacks())
+
+        tba_assets = tba_maya_api.get_maya_assets()
 
         self.list.clear()
 
-        for name in asset_sets:
+        for name in tba_assets:
             item = QtWidgets.QListWidgetItem(name, self.list)
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
             item.setCheckState(QtCore.Qt.Checked)
 
-    def add_item(self):
+    def add_item_maya(self):
+        tba_sets = tba_maya_api.create_tba_sets()
+
+        for tba_set in tba_sets:
+            item = QtWidgets.QListWidgetItem(tba_set, self.list)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
+            item.setCheckState(QtCore.Qt.Checked)
+
+        # item = QtWidgets.QListWidgetItem('', self.list)
+        # item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
+        # item.setCheckState(QtCore.Qt.Checked)
+        # item.setSelected(True)
+        # self.list.editItem(item)
+
+    def add_item_standalone(self):
         item = QtWidgets.QListWidgetItem('', self.list)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
         item.setCheckState(QtCore.Qt.Checked)

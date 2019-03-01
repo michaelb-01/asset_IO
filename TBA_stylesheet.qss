@@ -108,7 +108,7 @@ QToolButton:pressed {
 }
 
 QScrollBar::up-arrow:vertical {
-  image:url(icons/arrow_up_grey.png);
+  image:url(:icons/arrow_up_grey.png);
   width: 20px;
   height: 20px;
 }
@@ -118,7 +118,7 @@ QScrollBar::sub-line:vertical {
 }
 
 QScrollBar::down-arrow:vertical {
-  image:url(icons/arrow_down_grey.png);
+  image:url(:icons/arrow_down_grey.png);
   width: 20px;
   height: 20px;
 }
@@ -166,7 +166,7 @@ QComboBox QAbstractItemView:selected {
 }
 
 QComboBox:down-arrow {
-  image: url(icons/arrow_down_white.png);
+  image: url(:icons/arrow_down_white.png);
   width: 20px;
   height: 20px;
 }
@@ -190,7 +190,7 @@ QRadioButton::indicator::checked
   width: 16px;
   height: 16px;
   color: white;
-  image: url(icons/radio_button_checked_white.png);
+  image: url(:icons/radio_button_checked_white.png);
 }
 
 QRadioButton::indicator::unchecked
@@ -198,27 +198,27 @@ QRadioButton::indicator::unchecked
   width: 16px;
   height: 16px;
   color: white;
-  image: url(icons/radio_button_unchecked_white.png);
+  image: url(:icons/radio_button_unchecked_white.png);
 }
 
 QCheckBox::indicator:checked {
   width: 16px;
   height: 16px;
-  image: url(icons/checkbox_checked_white.png);
+  image: url(:icons/checkbox_checked_white.png);
 }
 
 QCheckBox::indicator:unchecked {
   width: 16px;
   height: 16px;
-  image: url(icons/checkbox_unchecked_white.png);
+  image: url(:icons/checkbox_unchecked_white.png);
 }
 
 QListView::indicator:checked {
-  image: url(icons/checkbox_checked_white.png);
+  image: url(:icons/checkbox_checked_white.png);
 }
 
 QListView::indicator:unchecked {
-  image: url(icons/checkbox_unchecked_white.png);
+  image: url(:icons/checkbox_unchecked_white.png);
 }
 
 QToolTip {

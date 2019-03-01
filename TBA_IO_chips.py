@@ -33,8 +33,8 @@ class MyLineEdit(QtWidgets.QLineEdit):
         super(MyLineEdit, self).keyPressEvent(event)
         self.keyPressed.emit(event.key())
 
-class MyDialog(QtWidgets.QDialog):
-    items = ['apple','lemon','orange','mango','papaya']
+class ChipsAutocomplete(QtWidgets.QDialog):
+    items = []
     filteredItems = items
     selectedItems = []
     chips = []
@@ -42,7 +42,7 @@ class MyDialog(QtWidgets.QDialog):
     # set parent of widget as maya's main window
     # this means the widget will stay on top of maya
     def __init__(self, parent=None):
-        super(MyDialog, self).__init__(parent)
+        super(ChipsAutocomplete, self).__init__(parent)
 
         self.setWindowTitle('Modal Dialogs')
         self.setMinimumSize(400,200)
@@ -73,7 +73,7 @@ class MyDialog(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout(self)
 
         main_layout.setAlignment(QtCore.Qt.AlignTop)
-        
+
         widget_layout = QtWidgets.QVBoxLayout()
         widget_layout.setSpacing(0)
 
@@ -93,11 +93,30 @@ class MyDialog(QtWidgets.QDialog):
         self.input.focusIn.connect(self.show_list)
         self.input.textChanged.connect(self.input_edited)
         self.input.keyPressed.connect(self.on_key_pressed)
+        self.input.returnPressed.connect(self.input_enter_pressed)
+
         self.list.itemClicked.connect(self.item_selected)
 
+    def addItems(self, items):
+        self.items = items
+        self.filteredItems = items
+        self.selectedItems = []
+        self.chips = []
+
+        self.list.clear()
+        self.list.addItems(items)
+
     def show_list(self):
-        self.list.show()
-        print('show list')
+        print('items:')
+        print(self.items)
+        print('filtered items:')
+        print(self.filteredItems)
+        print('selected items:')
+        print(self.selectedItems)
+
+        if self.items:
+            self.list.show()
+            print('show list')
 
     def hide_list(self):
         self.list.hide()
@@ -110,27 +129,42 @@ class MyDialog(QtWidgets.QDialog):
         self.update_list(text)
 
     def update_list(self, text=None):
+        #print(self.items)
         if not text:
             text = self.input.text()
 
         self.filteredItems = []
 
         for item in self.items:
-            if not text or text in item:
-                if item not in self.selectedItems:
+            #print('checking item {}'.format(item))
+            if text in item:
+                #print('{} is in {}'.format(text,item))
+                if not item in self.selectedItems:
+                    #print('add item {}'.format(item))
                     self.filteredItems.append(item)
+                else:
+                    continue
+                    print('ignoring {} since it is in selected items'.format(text))
 
-        self.list.clear()  
-        self.list.addItems(self.filteredItems)          
+        print('filtered items {}'.format(self.filteredItems))
+
+        self.list.clear()
+        self.list.addItems(self.filteredItems)
 
     def item_selected(self,item):
-        self.selectedItems.append(item.text())
         self.add_chip(item.text())
         self.update_list()
-        print('item selected')
-        print(item)
+
+    def input_enter_pressed(self):
+        text = self.input.text()
+
+        if text and not text in self.selectedItems:
+            self.input.setText('')
+            self.add_chip(text)
 
     def add_chip(self, text):
+        self.selectedItems.append(text)
+
         wdg = QtWidgets.QPushButton(text)
         self.chips.append(wdg)
         self.chip_layout.addWidget(wdg)
@@ -138,8 +172,9 @@ class MyDialog(QtWidgets.QDialog):
         self.input.setFocus()
 
     def chip_clicked(self, widget):
-        if widget.text() in self.selectedItems: 
-            self.selectedItems.remove(widget.text())
+        text = widget.text()
+        if text in self.selectedItems:
+            self.selectedItems.remove(text)
         else:
             return
 
@@ -152,19 +187,17 @@ class MyDialog(QtWidgets.QDialog):
         self.list.hide()
 
     def keyPressEvent(self, event):
-        print('key press')
-
         key = event.key()
 
         if key == QtCore.Qt.Key_Down:
             self.list.item(0).setSelected(True)
             self.list.setCurrentRow(0)
             self.list.setFocus()
+        elif key == QtCore.Qt.Key_Escape:
+            self.input.clearFocus()
+            self.list.hide()
 
     def on_key_pressed(self, key):
-        print('key pressed')
-        print(key)
-
         numItems = self.list.count()
 
         if numItems == 0:
@@ -182,7 +215,8 @@ class MyDialog(QtWidgets.QDialog):
 def run_standalone():
     app = QtWidgets.QApplication(sys.argv)
 
-    my_dialog = MyDialog()
+    my_dialog = ChipsAutocomplete()
+    my_dialog.addItems(['apple', 'lemon', 'orange', 'mango', 'papaya', 'strawberry'])
 
     my_dialog.show()  # Show the UI
     sys.exit(app.exec_())
