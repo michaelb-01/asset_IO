@@ -26,6 +26,8 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
     stage = ''
     entity = ''
 
+    selected = None
+
     TASKS = ['model','layout','rig','anim','fx','light']
 
     def __init__(self, parent=None, app=None):
@@ -130,6 +132,8 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         properties_layout.addWidget(self.assetTaskCombo)
         properties_layout.addWidget(self.assetTask)
 
+        properties_layout.addWidget(self.chips)
+
         right_layout.addWidget(self.properties_frame)
 
         # right_layout.addLayout(form_layout)
@@ -146,14 +150,29 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.list.itemChanged.connect(self.list_item_edited)
         self.list.itemClicked.connect(self.list_item_clicked)
 
+        self.chips.updated.connect(self.chips_updated)
+
     def list_item_edited(self, item):
+        print('list_item_edited')
+
         text = item.text().strip()
 
         if text:
             self.create_properties(item)
 
+        self.selected = item.text()
+
     def list_item_clicked(self, item):
+        if self.selected == item.text():
+            return
+            
+        print('list_item_clicked')
+        asset = item.data(QtCore.Qt.UserRole)
+        
         self.update_properties(item)
+        self.chips.update_chips(asset['tags'])
+
+        self.selected = item.text()
 
     def refresh(self):
         print('TBA_IO_collection_list - refresh_list')
@@ -178,6 +197,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
             'assetTask': 'model',
             'assetStage': self.stage,
             'assetEntity': self.entity,
+            'tags': [],
             'author': getpass.getuser(),
         }
 
@@ -187,12 +207,28 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
     def update_properties(self, item):
         asset = item.data(QtCore.Qt.UserRole)
+        print('update_properties, item: {0}, asset: {1}'.format(item.text(), asset))
         
         self.properties_frame.show()
 
         self.assetName.setText(asset['assetName'])
         self.assetStage.setText(asset['assetStage'])
         self.assetEntity.setText(asset['assetEntity'])
+
+        # self.chips.update_chips(asset['tags'])
+
+    def chips_updated(self, chips):
+        print('chips_updated')
+        print(chips)
+
+        item = self.list.currentItem()
+
+        asset = item.data(QtCore.Qt.UserRole)
+        asset['tags'] =  chips
+
+        item.setData(QtCore.Qt.UserRole, asset)
+
+        print('CHIPS_UPDATED, item: {0}, asset: {1}'.format(item.text(), asset))
 
     def add_item_maya(self):
         # sel = tba_maya_api.get_selection()
@@ -224,6 +260,9 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
             asset = {
                 'assetName': tba_set,
                 'assetTask': 'model',
+                'assetStage': self.stage,
+                'assetEntity': self.entity,
+                'tags':[],
                 'author': getpass.getuser(),
             }
 
@@ -260,13 +299,10 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.stage = parts[vfxIdx + 1]
         self.entity = parts[vfxIdx + 2]
 
-        print('update workspace')
-        print(self.stage)
-        print(self.entity)
-
     def mousePressEvent(self, event):
         print('mouse press event')
         self.chips.hide_list()
+        self.chips.input.clearFocus()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

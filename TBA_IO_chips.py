@@ -32,6 +32,8 @@ class ChipsAutocomplete(QtWidgets.QDialog):
     selectedItems = []
     chips = []
 
+    updated = QtCore.Signal(list)
+
     # set parent of widget as maya's main window
     # this means the widget will stay on top of maya
     def __init__(self, parent=None):
@@ -41,7 +43,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         # self.setMinimumSize(400,200)
 
         # remove help icon (question mark) from window
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)        
 
         # create widgets, layouts and connections (signals and slots)
         self.create_widgets()
@@ -108,6 +110,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         self.list.addItems(items)
 
     def show_list(self):
+        print('show list')
         if self.items:
             self.list.show()
 
@@ -162,6 +165,20 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         wdg.clicked.connect(lambda: self.chip_clicked(wdg))
         self.input.setFocus()
 
+        self.updated.emit(self.selectedItems)
+
+    def update_chips(self, chips):
+        print('update_chips')
+        print(chips)
+
+        self.chips = []
+        self.selectedItems = []
+        self.filteredItems = []
+        self.clearLayout(self.chip_layout)
+
+        for chip in chips:
+            self.add_chip(chip)
+
     def chip_clicked(self, widget):
         text = widget.text()
         if text in self.selectedItems:
@@ -172,6 +189,14 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         widget.deleteLater()
         widget = None
         self.update_list()
+
+        self.updated.emit(self.selectedItems)
+
+    def clearLayout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
     def mousePressEvent(self, event):
         self.input.clearFocus() # clear focus from line edit
