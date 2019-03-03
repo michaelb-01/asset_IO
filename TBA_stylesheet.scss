@@ -7,7 +7,7 @@
 
 QWidget {
 	background-color: $grey;
-  border: 0px;
+  // border: 0px;
 }
 
 QWidget#tbaDark {
@@ -21,6 +21,7 @@ QWidget#tbaLight {
 // LINE EDIT
 QLineEdit {
   background-color: $grey-dark;
+  selection-background-color: rgb(233, 99, 0);
   padding: 3px;
 }
 
@@ -49,13 +50,16 @@ QPlainTextEdit {
 
 // LIST WIDGETS
 QListWidget {
-  padding: 10px;
   background-color: $grey-dark;
-  color: white;
+  //color: white;
 }
 
 QListWidget:focus {
   outline: 0px;
+}
+
+QListWidget::item {
+  padding: 5px;
 }
 
 QListWidget::item:hover {
@@ -86,6 +90,7 @@ QListWidget::item:disabled {
 // BUTTONS
 QPushButton {
   padding: 5px;
+  border: none;
   //background-color: $grey-light;
   // border: 1px solid $grey-light;
 }
@@ -101,6 +106,13 @@ QPushButton[stroke="true"]:hover {
 
 QPushButton::menu-indicator {
   image: none;
+}
+
+QPushButton#chip {
+  background-color:$grey-light;
+  margin:0 5px 0 0;
+  padding:4px 6px;
+  border-radius:11px;
 }
 
 QPushButton#refresh {

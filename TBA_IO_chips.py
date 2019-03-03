@@ -1,16 +1,9 @@
 import sys
-
+import os
 from PySide2 import QtCore, QtWidgets
+import sqss_compiler
 
-class Chip(QtWidgets.QPushButton):
-    def __init__(self, text, parent=None):
-        super(Chip, self).__init__(text, parent)
-
-        self.clicked.connect(self.chip_clicked)
-
-    def chip_clicked(self):
-        print('chip clicked')
-        print(self.text)
+sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 class MyLineEdit(QtWidgets.QLineEdit):
     focusIn = QtCore.Signal()
@@ -45,7 +38,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         super(ChipsAutocomplete, self).__init__(parent)
 
         self.setWindowTitle('Modal Dialogs')
-        self.setMinimumSize(400,200)
+        # self.setMinimumSize(400,200)
 
         # remove help icon (question mark) from window
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -56,14 +49,21 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         self.create_connections()
 
     def create_widgets(self):
-        self.label = QtWidgets.QLabel('Chips')
-
         self.chip_list = QtWidgets.QListWidget()
 
         self.input = MyLineEdit()
+        self.input.setStyleSheet("QLineEdit {background-color: none;}")
+
+        self.line = QtWidgets.QFrame()
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
 
         self.list = QtWidgets.QListWidget()
-        self.list.addItems(self.items)
+        self.shadow = QtWidgets.QGraphicsDropShadowEffect()
+        self.shadow.setXOffset(0)
+        self.shadow.setYOffset(3)
+        self.shadow.setBlurRadius(20)
+        self.list.setGraphicsEffect(self.shadow)
         self.list.hide()
 
         self.setFocus() # removes focus from the line edit
@@ -71,8 +71,9 @@ class ChipsAutocomplete(QtWidgets.QDialog):
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(0,0,0,0)
 
-        main_layout.setAlignment(QtCore.Qt.AlignTop)
+        # main_layout.setAlignment(QtCore.Qt.AlignTop)
 
         widget_layout = QtWidgets.QVBoxLayout()
         widget_layout.setSpacing(0)
@@ -84,7 +85,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         input_layout.addWidget(self.input)
 
         widget_layout.addLayout(input_layout)
-        # widget_layout.addWidget(self.input2)
+        widget_layout.addWidget(self.line)
         widget_layout.addWidget(self.list)
 
         main_layout.addLayout(widget_layout)
@@ -107,16 +108,8 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         self.list.addItems(items)
 
     def show_list(self):
-        print('items:')
-        print(self.items)
-        print('filtered items:')
-        print(self.filteredItems)
-        print('selected items:')
-        print(self.selectedItems)
-
         if self.items:
             self.list.show()
-            print('show list')
 
     def hide_list(self):
         self.list.hide()
@@ -142,11 +135,6 @@ class ChipsAutocomplete(QtWidgets.QDialog):
                 if not item in self.selectedItems:
                     #print('add item {}'.format(item))
                     self.filteredItems.append(item)
-                else:
-                    continue
-                    print('ignoring {} since it is in selected items'.format(text))
-
-        print('filtered items {}'.format(self.filteredItems))
 
         self.list.clear()
         self.list.addItems(self.filteredItems)
@@ -165,7 +153,10 @@ class ChipsAutocomplete(QtWidgets.QDialog):
     def add_chip(self, text):
         self.selectedItems.append(text)
 
+        # wdg = Chip(text)
         wdg = QtWidgets.QPushButton(text)
+        wdg.setCursor(QtCore.Qt.PointingHandCursor)
+        wdg.setObjectName('chip')
         self.chips.append(wdg)
         self.chip_layout.addWidget(wdg)
         wdg.clicked.connect(lambda: self.chip_clicked(wdg))
@@ -214,6 +205,13 @@ class ChipsAutocomplete(QtWidgets.QDialog):
 
 def run_standalone():
     app = QtWidgets.QApplication(sys.argv)
+
+    module_path = os.path.dirname(os.path.abspath(__file__))
+
+    app.setStyleSheet(sqss_compiler.compile(
+        os.path.join(module_path,'TBA_stylesheet.scss'),
+        os.path.join(module_path,'variables.scss'),
+    ))
 
     my_dialog = ChipsAutocomplete()
     my_dialog.addItems(['apple', 'lemon', 'orange', 'mango', 'papaya', 'strawberry'])

@@ -17,6 +17,22 @@ def export_maya_set(assetName):
 
     print('export objects: {0}'.format(objs))
 
+def get_set_contents(name):
+    print('tba_maya_api - get_set_contents')
+    # get corresponding set
+    tba_set = mc.ls('tba_asset_' + name, type='objectSet')
+
+    if not tba_set:
+        return False
+
+    # get set contents
+    objs = mc.sets( tba_set, q=True )
+
+    if not objs:
+        return False
+
+    return objs
+
 def create_tba_sets():
     # get maya selection
     sel = mc.ls(sl=1, transforms=1)
@@ -47,8 +63,15 @@ def create_tba_sets():
 
     return tba_sets
 
+def get_selection():
+    # get maya selection
+    return mc.ls(sl=1, transforms=1)
+
 def get_maya_assets():
     return mc.ls('tba_asset*', type='objectSet')
+
+def get_scene_path():
+    return mc.workspace(q=1,fullName=1)
 
 def nameChangedCallback(*args):
     """

@@ -21,16 +21,18 @@ class TBA_IO_notes(QtWidgets.QDialog):
         self.create_layouts()
         self.create_connections()
 
+        self.setGeometry(0,0,300,100)
+
     def create_widgets(self):
         self.header = QtWidgets.QLabel('Notes')
 
         self.notes = QtWidgets.QPlainTextEdit()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        # self.notes.setSizePolicy(sizePolicy)
         self.notes.setFixedHeight(100)
+        self.notes.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.thumbnail_icon = QtGui.QPixmap('icons/take_thumbnail_grey_light.png')
         self.thumbnail_btn = QtWidgets.QPushButton('')
+        self.thumbnail_btn.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.thumbnail_btn.setCursor(QtCore.Qt.PointingHandCursor)
         
         # self.thumbnail_btn.setSizePolicy(sizePolicy)

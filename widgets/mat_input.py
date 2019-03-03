@@ -14,7 +14,7 @@ def maya_main_window():
 class DynamicLabel(QtWidgets.QLabel):
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self, *args, **kwargs)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         self.setStyleSheet("background-color: grey;")
 
@@ -30,14 +30,20 @@ class DynamicLabel(QtWidgets.QLabel):
         self.big = QtCore.QRect(10,10,200,50)
 
         self.myfont = self.font() 
+        self.setFont(self.myfont)
+
+        # self.myfont.setFixedPitch(True)
+        # self.myfont.setRawMode(True)
+        # self.myfont.setStretch(50)
+        # self.myfont.setStyleHint(QtGui.QFont.SansSerif, QtGui.QFont.PreferMatch)
 
         # self.move(self.big.x(), self.big.y())
         # self.resize(self.big.width(),self.big.height())
         # self.setMinimumHeight(self.small.height())
         # self.setMaximumHeight(self.big.height())
         self.setBaseSize(QtCore.QSize(self.big.width(), self.big.height()))
-        self.updateGeometry()
-        self.setGeometry(10,10,300,50)
+        # self.updateGeometry()
+        # self.setGeometry(10,10,300,50)
 
         print('Height: {0}'.format(self.sizeHint().height()))
         print('Width: {0}'.format(self.sizeHint().width()))
@@ -46,11 +52,14 @@ class DynamicLabel(QtWidgets.QLabel):
         height = evt.size().height()
         print('Resizing, height: {0}'.format(evt.size().height()))
 
-        self.myfont.setPixelSize(height)
-        self.setFont(self.myfont)
 
-        if self.rect:
-            self.resize(self.rect.width(), height)
+        # setting the font size to the height breaks the animation
+        self.myfont.setPixelSize(30)
+        self.setFont(self.myfont)
+        # self.setStyleSheet('font-size: 5px; background-color:red;')
+
+        # if self.rect:
+        #     self.resize(self.rect.width(), height)
 
     def toggle(self):
         if not self.rect:
@@ -93,7 +102,7 @@ class MyDialog(QtWidgets.QWidget):
         main_layout.addWidget(self.btn)
 
     def create_connections(self):
-      self.btn.clicked.connect(self.label.toggle)
+        self.btn.clicked.connect(self.label.toggle)
 
 def run_standalone():
 

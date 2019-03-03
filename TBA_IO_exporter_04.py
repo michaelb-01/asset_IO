@@ -16,6 +16,7 @@ from TBA_IO_export_options import TBA_IO_export_options
 sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 import TBA_IO_resources
+import tba_utils
 
 # ----------------------------------------------------------------------
 # Environment detection
@@ -91,6 +92,8 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         # unique object name for maya
         self.setObjectName('TBA_IO_exporter')
 
+        self.setProperty("saveWindowPref", True)
+
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -143,6 +146,14 @@ class TBA_IO_exporter(QtWidgets.QDialog):
     def create_connections(self):
         self.export_btn.clicked.connect(self.export)
 
+    def export_abc(self, asset):
+        print('export_abc')
+        print(asset)
+
+    def export_database(self, asset):
+        # tba_utils.test()
+        tba_utils.db.export_asset(asset)
+
     def export(self):
         print('export!!')
         collections = self.collection_list.list
@@ -150,7 +161,21 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         for i in range(collections.count()):
             item = collections.item(i)
             if item.checkState() == QtCore.Qt.Checked:
-                tba_maya_api.export_maya_set(item.text())
+                asset = item.data(QtCore.Qt.UserRole)
+                ## TEMP FOR DEV
+                try:
+                    rootObjs = tba_maya_api.get_set_contents(asset['assetName'])
+                except:
+                    rootObjs = ['cube_GRP']
+
+                if not rootObjs:
+                    continue
+
+                asset['rootObjs'] = rootObjs
+                asset['filepath'] = '/Users/michaelbattcock/Documents/VFX/TBA/0907TBA_1018_RnD/vfx/build/_published3d'
+
+                # self.export_abc(asset)
+                self.export_database(asset)
 
     def update_maya_workspace(self):
         workspace = mc.workspace(q=1,fullName=1)
