@@ -18,8 +18,7 @@ QWidget#tbaLight {
 QLineEdit {
   background-color: rgb(53,56,60);
   selection-background-color: rgb(233, 99, 0);
-  padding: 3px;
-}
+  }
 
 QLineEdit::disabled {
   background-color: rgb(100,105,115);
@@ -38,7 +37,7 @@ QPlainTextEdit {
 
 QListWidget {
   background-color: rgb(53,56,60);
-  }
+}
 
 QListWidget:focus {
   outline: 0px;

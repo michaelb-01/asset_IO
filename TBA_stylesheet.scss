@@ -22,7 +22,7 @@ QWidget#tbaLight {
 QLineEdit {
   background-color: $grey-dark;
   selection-background-color: rgb(233, 99, 0);
-  padding: 3px;
+  //padding: 3px;
 }
 
 QLineEdit::disabled {
@@ -51,7 +51,6 @@ QPlainTextEdit {
 // LIST WIDGETS
 QListWidget {
   background-color: $grey-dark;
-  //color: white;
 }
 
 QListWidget:focus {

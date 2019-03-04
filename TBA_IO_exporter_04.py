@@ -17,6 +17,7 @@ sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 import TBA_IO_resources
 import tba_utils
+import tba_utils_maya
 
 # ----------------------------------------------------------------------
 # Environment detection
@@ -150,7 +151,14 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         print('export_abc')
         print(asset)
 
-    def export_database(self, asset):
+        tba_utils_maya.export_abc(asset)
+
+        # msg = QtWidgets.QMessageBox()
+        # msg.setIcon(QMessageBox.Information)
+        # msg.setText("Export Successfull")
+        # msg.setInformativeText(asset['filepath'])
+
+    def export_to_database(self, asset):
         # tba_utils.test()
         tba_utils.db.export_asset(asset)
 
@@ -158,24 +166,27 @@ class TBA_IO_exporter(QtWidgets.QDialog):
         print('export!!')
         collections = self.collection_list.list
 
+        # get data
+        data = tba_utils.parse_job_path(tba_utils_maya.get_scene_path())
+        publish_path = os.path.join(data['job_path'], 'vfx', data['stage'], '_published3d')
+
+        # exported objects
+        exported = []
+
         for i in range(collections.count()):
             item = collections.item(i)
             if item.checkState() == QtCore.Qt.Checked:
                 asset = item.data(QtCore.Qt.UserRole)
-                ## TEMP FOR DEV
-                try:
-                    rootObjs = tba_maya_api.get_set_contents(asset['assetName'])
-                except:
-                    rootObjs = ['cube_GRP']
 
-                if not rootObjs:
-                    continue
+                version = 'v' + str(asset['version'] + 1).zfill(3)
+                asset['filepath'] = os.path.join(publish_path, asset['name'], asset['type'], version, asset['name'] + '.abc' )
 
-                asset['rootObjs'] = rootObjs
-                asset['filepath'] = '/Users/michaelbattcock/Documents/VFX/TBA/0907TBA_1018_RnD/vfx/build/_published3d'
+                success = self.export_abc(asset)
 
-                # self.export_abc(asset)
-                self.export_database(asset)
+                if success:
+                    exported.append(asset)
+
+                self.export_to_database(asset)
 
     def update_maya_workspace(self):
         workspace = mc.workspace(q=1,fullName=1)

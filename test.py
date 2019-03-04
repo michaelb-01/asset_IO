@@ -16,40 +16,29 @@ class MyDialog(QtWidgets.QDialog):
         self.create_connections()
 
     def create_widgets(self):
-        pass
+        self.list = QtWidgets.QListWidget()
+
+        for name in ['one','tow','three']:
+            item = QtWidgets.QListWidgetItem(name, self.list)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
+            self.list.addItem(item)
 
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QHBoxLayout(self)
 
-        splitter1 = QtWidgets.QSplitter(self)
-        splitter1.setOrientation(QtCore.Qt.Horizontal)
-
-        left = QtWidgets.QFrame(splitter1)
-        left.setFrameShape(QtWidgets.QFrame.StyledPanel)
-
-        center = QtWidgets.QFrame(splitter1)
-        center.setFrameShape(QtWidgets.QFrame.StyledPanel)
-
-        # splitter2 = QtWidgets.QSplitter(splitter1)
-        # sizePolicy = splitter2.sizePolicy()
-        # sizePolicy.setHorizontalStretch(1)
-
-        # splitter2.setSizePolicy(sizePolicy)
-        # splitter2.setOrientation(QtCore.Qt.Vertical)
-
-        # top_right = QtWidgets.QFrame(splitter2)
-        # top_right.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        # bottom_right = QtWidgets.QFrame(splitter2)
-        # bottom_right.setFrameShape(QtWidgets.QFrame.StyledPanel)
-
-        main_layout.addWidget(splitter1)
+        main_layout.addWidget(self.list)
 
         self.setGeometry(100, 100, 500, 500)
 
     def create_connections(self):
-        pass
+        self.list.itemChanged.connect(self.edited)
 
+    def edited(self, item):
+        print('edited')
+
+        asset = item.data(QtCore.Qt.UserRole)
+        item.setData(QtCore.Qt.UserRole, 'hello')
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

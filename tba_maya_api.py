@@ -1,3 +1,5 @@
+import os
+
 try:
     import maya.cmds as mc
     import maya.api.OpenMaya as om
@@ -71,7 +73,7 @@ def get_maya_assets():
     return mc.ls('tba_asset*', type='objectSet')
 
 def get_scene_path():
-    return mc.workspace(q=1,fullName=1)
+    return os.path.abspath(mc.workspace(q=1,fullName=1))
 
 def nameChangedCallback(*args):
     """

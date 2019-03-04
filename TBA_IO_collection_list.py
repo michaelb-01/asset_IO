@@ -1,19 +1,21 @@
 import sys
 import os
 import getpass
+import datetime
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-sys.dont_write_bytecode = True  # Avoid writing .pyc files
-
-import sqss_compiler
-import TBA_UI
+import TBA_IO_chips
+try:
+    import tba_utils_maya
+except:
+    print('Not in maya')
 
 import TBA_IO_resources
 
-import tba_maya_api
-import TBA_IO_chips
-#import maya.cmds as mc
+import sqss_compiler
+
+sys.dont_write_bytecode = True  # Avoid writing .pyc files
 
 class TBA_IO_collection_list(QtWidgets.QDialog):
     importer = False
@@ -25,7 +27,9 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
     stage = ''
     entity = ''
+    task = ''
 
+    count = 0
     selected = None
 
     TASKS = ['model','layout','rig','anim','fx','light']
@@ -42,15 +46,20 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.create_connections()
 
         # self.setMinimumWidth(200)
-        self.setGeometry(100,100,400,200)
+        self.setGeometry(100,100,400,160)
 
         self.update_workspace()
 
-        #self.refresh()
+        if self.app == 'maya':
+            self.refresh()
 
     def create_widgets(self):
-        self.header = QtWidgets.QLabel('Collections')
-        self.header.setAlignment(QtCore.Qt.AlignTop)
+        self.header_collections = QtWidgets.QLabel('Collections')
+        # self.header_collections.setStyleSheet('font-size: 14px;')
+
+        self.header_properties = QtWidgets.QLabel('Properties')
+        self.header_properties.setContentsMargins(0,6,0,0)
+        # self.header_properties.setStyleSheet('font-size: 14px;')
 
         self.list = QtWidgets.QListWidget()
 
@@ -58,13 +67,13 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.add_btn.setCursor(QtCore.Qt.PointingHandCursor)
         self.add_btn.setStyleSheet('font-size: 20px; width:22px; height:22px; margin:0; padding:0 0 4 1;')
 
-        self.assetName = QtWidgets.QLabel('Name') 
+        self.assetName = QtWidgets.QLabel('Name')
         self.assetStage = QtWidgets.QLabel('Stage')
         self.assetEntity = QtWidgets.QLabel('Entity')
         self.assetTask = QtWidgets.QLabel('Task')
         self.assetTask.hide()
         self.assetTaskCombo = QtWidgets.QComboBox()
-        # self.assetTaskCombo.setStyleSheet('background-color:rgb(80,85,90); color:#ccc;')
+        self.assetTaskCombo.setStyleSheet('border: none;')
         self.assetTaskCombo.addItems(self.TASKS)
         self.assetVersion = QtWidgets.QLabel()
         self.author = QtWidgets.QLabel()
@@ -73,10 +82,12 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         self.chips = TBA_IO_chips.ChipsAutocomplete()
         self.chips.addItems(['apple', 'lemon', 'orange', 'mango', 'papaya', 'strawberry'])
 
+        self.test = QtWidgets.QPushButton('test')
+
     def create_layouts(self):
         # self must be passed to the main_layout so it is parented to the dialog instance
         main_layout = QtWidgets.QHBoxLayout(self)
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(10)
         main_layout.setContentsMargins(0,0,0,0)
 
         #### LEFT ####
@@ -91,7 +102,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         header_layout = QtWidgets.QHBoxLayout()
         header_layout.setContentsMargins(0,0,0,0)
 
-        header_layout.addWidget(QtWidgets.QLabel('Collections'))
+        header_layout.addWidget(self.header_collections)
         header_layout.addStretch()
         header_layout.addWidget(self.add_btn)
 
@@ -108,31 +119,29 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
         right_layout.setContentsMargins(0,0,0,0)
         right_layout.setAlignment(QtCore.Qt.AlignTop)
 
-        # form_layout = QtWidgets.QFormLayout()
-        # form_layout.setFormAlignment(QtCore.Qt.AlignLeft)
-        # form_layout.setLabelAlignment(QtCore.Qt.AlignLeft)
-        # form_layout.addRow('Name', self.assetName)
-        # form_layout.addRow('Task', self.assetTask)
-        # form_layout.addRow('Author', QtWidgets.QLabel('Mike Battcock'))
-
-        header_properties = QtWidgets.QLabel('Properties')
-        header_properties.setContentsMargins(0,5,0,0)
-
-        right_layout.addWidget(header_properties)
+        right_layout.addWidget(self.header_properties)
 
         self.properties_frame = QtWidgets.QFrame()
+        self.properties_frame.setFrameStyle(QtWidgets.QFrame.StyledPanel);
         self.properties_frame.hide()
 
-        properties_layout = QtWidgets.QVBoxLayout()
-        self.properties_frame.setLayout(properties_layout)
-        
-        properties_layout.addWidget(self.assetName)
-        properties_layout.addWidget(self.assetStage)
-        properties_layout.addWidget(self.assetEntity)
-        properties_layout.addWidget(self.assetTaskCombo)
-        properties_layout.addWidget(self.assetTask)
+        self.properties_layout = QtWidgets.QVBoxLayout()
+        self.properties_frame.setLayout(self.properties_layout)
 
-        properties_layout.addWidget(self.chips)
+        form_layout = QtWidgets.QFormLayout()
+
+        form_layout.setLabelAlignment(QtCore.Qt.AlignLeft)
+        form_layout.setFormAlignment(QtCore.Qt.AlignLeft)
+
+
+        form_layout.addRow('Name:', self.assetName)
+        form_layout.addRow('Stage:', self.assetStage)
+        form_layout.addRow('Entity:', self.assetEntity)
+
+        form_layout.addRow('Task:', self.assetTaskCombo)
+
+        self.properties_layout.addLayout(form_layout)
+        self.properties_layout.addWidget(self.chips)
 
         right_layout.addWidget(self.properties_frame)
 
@@ -140,6 +149,7 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
         main_layout.addWidget(left_frame)
         main_layout.addWidget(right_frame)
+        # main_layout.addWidget(self.test)
 
     def create_connections(self):
         if (self.app == 'maya'):
@@ -152,23 +162,46 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
         self.chips.updated.connect(self.chips_updated)
 
+        self.assetTaskCombo.currentIndexChanged.connect(self.task_changed)
+        self.test.clicked.connect(self.solidify_task)
+
+    def solidify_task(self):
+        print('solidify task')
+        self.assetTaskCombo.deleteLater()
+        self.properties_layout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.assetTask)
+
     def list_item_edited(self, item):
-        print('list_item_edited')
+        print('list_item_edited, count: {0}, list.count: {1}, selected: {2}'.format(self.count, self.list.count(), self.selected))
 
         text = item.text().strip()
 
-        if text:
-            self.create_properties(item)
+        # remove item if empty name
+        if not text:
+            self.list.takeItem(item)
+            return
+        if text == self.selected:
+            return
 
-        self.selected = item.text()
+        self.selected = text
+
+        # update asset name
+        asset = item.data(QtCore.Qt.UserRole)
+        if asset['name'] != text:
+            asset['name'] = text
+            item.setData(QtCore.Qt.UserRole, asset)
+
+        self.update_properties(item)
 
     def list_item_clicked(self, item):
-        if self.selected == item.text():
-            return
-            
         print('list_item_clicked')
+
+        # ignore if already selected
+        if self.selected == item.text():
+            print('item already selected, ignoring')
+            return
+
         asset = item.data(QtCore.Qt.UserRole)
-        
+
         self.update_properties(item)
         self.chips.update_chips(asset['tags'])
 
@@ -179,18 +212,22 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
         #cbIds.extend(tba_maya_api.set_asset_callbacks())
 
-        tba_assets = tba_maya_api.get_maya_assets()
+        tba_assets = tba_utils_maya.get_tba_assets()
 
         self.list.clear()
 
-        for name in tba_assets:
-            item = QtWidgets.QListWidgetItem(name, self.list)
+        for asset in tba_assets:
+            print('asset is: ')
+            print(asset)
+            item = QtWidgets.QListWidgetItem(asset['name'], self.list)
+            item.setData(QtCore.Qt.UserRole, asset)
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
             item.setCheckState(QtCore.Qt.Checked)
 
     def create_properties(self, item):
         asset_name = item.text()
         print('create_properties')
+        return
 
         asset = {
             'assetName': asset_name,
@@ -208,17 +245,29 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
     def update_properties(self, item):
         asset = item.data(QtCore.Qt.UserRole)
         print('update_properties, item: {0}, asset: {1}'.format(item.text(), asset))
-        
+
         self.properties_frame.show()
 
-        self.assetName.setText(asset['assetName'])
-        self.assetStage.setText(asset['assetStage'])
-        self.assetEntity.setText(asset['assetEntity'])
+        self.assetName.setText(asset['name'])
+        self.assetStage.setText(asset['stage'])
+        self.assetEntity.setText(asset['entity'])
+
+        taskIndex = self.TASKS.index(asset['type'])
+        self.assetTaskCombo.setCurrentIndex(taskIndex)
 
         # self.chips.update_chips(asset['tags'])
 
+    def task_changed(self, index):
+        print('task_changed, index: {0}'.format(index))
+        item = self.list.currentItem()
+
+        asset = item.data(QtCore.Qt.UserRole)
+        asset['type'] = self.TASKS[index]
+
+        item.setData(QtCore.Qt.UserRole, asset)
+
     def chips_updated(self, chips):
-        print('chips_updated')
+        print('chips_updated, chips: {0}'.format(chips))
         print(chips)
 
         item = self.list.currentItem()
@@ -228,70 +277,56 @@ class TBA_IO_collection_list(QtWidgets.QDialog):
 
         item.setData(QtCore.Qt.UserRole, asset)
 
-        print('CHIPS_UPDATED, item: {0}, asset: {1}'.format(item.text(), asset))
-
     def add_item_maya(self):
-        # sel = tba_maya_api.get_selection()
+        # create maya sets from selected objects
+        # assets = tba_utils_maya.prep_tba_assets()
+        assets = tba_utils_maya.create_tba_assets()
 
-        # for obj in sel:
-        #     assetName = obj.split('|')[-1]
-        #     assetName = assetName.lower().split('grp')[0].rstrip('_')
-
-        #     if assetName in self.assets:
-        #         continue
-
-        #     item = QtWidgets.QListWidgetItem(assetName)
-        #     item.setBackground(QtGui.QColor(80,85,90,150))
-        #     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
-        #     item.setCheckState(QtCore.Qt.Checked)
-        #     item.setSelected(True)
-            
-        #     self.list.addItem(item)
-        #     self.create_properties(assetName)
-        #     # self.list.editItem(item)
-
-        # return
-
-
-
-        tba_sets = tba_maya_api.create_tba_sets()
-
-        for tba_set in tba_sets:
-            asset = {
-                'assetName': tba_set,
-                'assetTask': 'model',
-                'assetStage': self.stage,
-                'assetEntity': self.entity,
-                'tags':[],
-                'author': getpass.getuser(),
-            }
-
-            item = QtWidgets.QListWidgetItem(tba_set)
+        for asset in assets:
+            # create list widget item
+            item = QtWidgets.QListWidgetItem(asset['name'])
+            # colour item to show it has not yet been exported
+            item.setBackground(QtGui.QColor(80,85,90,150))
+            # store asset data as user data on item
             item.setData(QtCore.Qt.UserRole, asset)
+            # make checkable, checked and editable
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
             item.setCheckState(QtCore.Qt.Checked)
             self.list.addItem(item)
 
     def add_item_standalone(self):
+        asset = {
+            'name': '',
+            'type': 'model',
+            'stage': self.stage,
+            'entity': self.entity,
+            'tags':[],
+            'author': getpass.getuser(),
+        }
+
+        # create list widget item
         item = QtWidgets.QListWidgetItem('')
+        # colour item to show it has not yet been exported
         item.setBackground(QtGui.QColor(80,85,90,150))
+        # store asset data as user data on item
+        item.setData(QtCore.Qt.UserRole, asset)
+        # make checkable, checked and editable
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
         item.setCheckState(QtCore.Qt.Checked)
-        item.setSelected(True)
         self.list.addItem(item)
 
         self.list.editItem(item)
 
     def update_workspace(self):
         if self.app == 'maya':
-            scene = tba_maya_api.get_scene_path()
+            scene = tba_utils_maya.get_scene_path()
         else:
-            scene = '/Users/michaelbattcock/Documents/VFX/TBA/0907TBA_1018_RnD/vfx/build/shapes/maya/scenes/shapes_mlb_v001.mb'
+            scene = os.path.abspath('/Users/michaelbattcock/Documents/VFX/TBA/0907TBA_1018_RnD/vfx/build/shapes/maya/scenes/shapes_mlb_v001.mb')
 
         parts = scene.split(os.sep)
 
         if not 'vfx' in parts:
-            print('vfx not found in scene path')
+            print('vfx not found in scene {0}'.format(parts))
             return
 
         vfxIdx = parts.index('vfx')

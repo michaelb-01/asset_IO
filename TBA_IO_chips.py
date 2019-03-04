@@ -43,7 +43,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
         # self.setMinimumSize(400,200)
 
         # remove help icon (question mark) from window
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)        
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         # create widgets, layouts and connections (signals and slots)
         self.create_widgets()
@@ -154,6 +154,7 @@ class ChipsAutocomplete(QtWidgets.QDialog):
             self.add_chip(text)
 
     def add_chip(self, text):
+        print('TBA_IO_chips - add_chip')
         self.selectedItems.append(text)
 
         # wdg = Chip(text)
